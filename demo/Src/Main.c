@@ -1,699 +1,549 @@
 //*****************************************************************************************************
-//FlashºÍRAMÈí¼þ°æ±¾ÇÐ»»ËµÃ÷(³ÌÐòÄ¬ÈÏÎªram°æ±¾)
-//
-//Ò».ÇÐ»»ÎªFlashÉÕÐ´°æ±¾·½·¨
-//1.½«Ö÷³ÌÐòÖÐµÄ:MemCopy(&RamfuncsLoadStart, &RamfuncsLoadEnd, &RamfuncsRunStart);
-//               InitFlash();
-//  Á½¸öº¯ÊýÈ¡Ïû×¢ÊÍ
-//2.½«¹¤³ÌÖÐµÄ28335_RAM_lnk.cmd´Ó¹¤³ÌÖÐÉ¾³ý£¬Ìí¼ÓCMDÎÄ¼þ¼ÐÏÂµÄF28335.cmdÎÄ¼þ£¬È«±àÒëÒ»´Î¼´¿ÉÉÕÐ´¡£
-//
-//¶þ.ÇÐ»»ÎªRAMÔÚÏß·ÂÕæ°æ±¾·½·¨
-//1.½«Ö÷³ÌÐòÖÐµÄ:MemCopy(&RamfuncsLoadStart, &RamfuncsLoadEnd, &RamfuncsRunStart);
-//               InitFlash();
-//  Á½¸öº¯Êý×¢ÊÍµô
-//2.½«¹¤³ÌÖÐµÄF28335.cmd´Ó¹¤³ÌÖÐÉ¾³ý£¬Ìí¼ÓCMDÎÄ¼þ¼ÐÏÂµÄ28335_RAM_lnk.cmdÎÄ¼þ£¬È«±àÒëÒ»´Î¼´¿É¡£
-//
-//*****************************************************************************************************
-
-#include  <math.h>
-#include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
-#include "motor.h"    // define the parameters of motor
-
-//#include "rcns.h"
 //#include "ptos.h"
-#include "vptos.h"
-PTOC pos_ctrl = PTOC_DEFAULTS;
-//RCNS pos_ctrl = RCNS_DEFAULTS;
+#include <math.h>
+#include <dlog4ch.h>
+#include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
+// Prototype statements for functions found within this file.
+int T_1=0;
+#define pi 3.1415926
+#define FALSE 0
+#define TRUE  1
 
-#include "dlog4ch.h"
-DLOG_4CH dlog = DLOG_4CH_DEFAULTS; //Í¼ÏñÏÔÊ¾Ö¸Õëº¯Êý
-/*****Í¼ÏñÏÔÊ¾****************/
+interrupt void EPWM_1_INT(void);                //×ªÓ³Ê¼ã·¨SVPWMÊµ
+interrupt void INT3_ISR(void);                  // Ð¶Ïº12Ó¦Î»
+void Init_SiShu(void);                          //Ê¼
+void performance_metrics_update(float y);
+PTOC pos_ctrl = PTOC_DEFAULTS;                  //á¹¹PTOCÍ±Ê¼
+DLOG_4CH dlog = DLOG_4CH_DEFAULTS;              //á¹¹DLOGÍ±Í¼Ê¾Ö¸ëº¯
+
+
+Uint16 T3Period = 0;
+_iq PolePairs=_IQ(4); 
+//:::::::::::::::::::::::::::Î»Ã»:::::::::::::::::::::::::::
+long Place_now=0;//Î»Ã±Öµ
+Uint16 PlaceSetBit=0;  //Î»è¶¨Ö¾Î»
+Uint16 PosEnable=1;//Î»Ã¿ Ê¹  1 Ê¹ ;  0 -> 
+int32 PosCount = 0;
+float32 pscale=2;
+Uint16 LocationFlag=TRUE;
+Uint16 LocationEnd=0;
+Uint16 PositionPhase180=3;
+Uint16 PositionPhase360=6;
+Uint16 SpeedLoopPrescaler = 20;     // Ù¶È»
+Uint16 SpeedLoopCount = 1;          // Ù¶È»
+_iq NewRawTheta=0;
+_iq OldRawTheta=0;
+_iq RawThetaTmp=0;
+float32 SpeedRef=0;
+_iq Speed=0;                        //Ù¶È£Öµ
+
+_iq RawTheta=0;
+_iq OldRawThetaPos = 0;
+
+_iq TotalPulse=0; 
+_iq MechTheta = 0;                   //ÐµÇ¶È£Î»
+_iq ElecTheta = 0;                   //Ç¶È£Î»
+_iq AnglePU=0;                       //Ç¶È±Û»
+_iq Cosine=0;
+_iq Sine=0;
+_iq IQ_Given=0; _iq IQ_Given_test=1200;
+_iq Speed_Error=0;
+
+_iq Speed_OutMax=_IQ(0.99999);
+_iq Speed_OutMin=-_IQ(0.99999);
+_iq Speed_Out=0;
+Uint16 Speed_run=0;
+_iq Ualfa=0;
+_iq Ubeta=0;
+_iq Ud=0;
+_iq Uq=0;
+_iq B0=0;
+_iq B1=0;
+_iq B2=0;
+_iq X=0;
+_iq Y=0;
+_iq Z=0;
+_iq t1=0;
+_iq t2=0;
+_iq Ta=0;
+_iq Tb=0;
+_iq Tc=0;
+_iq MfuncD1=0;
+_iq MfuncD2=0;
+_iq MfuncD3=0;
+_iq MechScaler=_IQ(0.0);
+_iq SpeedScaler=_IQ(0.00);
+Uint16 BuChang=166;
+int16 TotalCnt=4000;
+_iq RawCnt1=0;
+_iq RawCnt2=0;
+
+_iq Speed_Kd=_IQ(0);
+long PlaceSet=10000;//Î»Ã»
+Uint16 PlaceEnable=0;//Î»Ã»Ê¹  1 Ê¹ ;  0 Ö¹
+//=============================================================
+float32 E_Ding_DianLiu=4.0;        //ÃµÄ¶î¶¨Ð§Öµ  Î»A
+Uint16 BaseSpeed=3000;              //Ãµî¶¨×ª
+
+                
+/*****Í¼Ê¾****************/
 int16 DlogCh1=0;
 int16 DlogCh2=0;
 int16 DlogCh3=0;
 int16 DlogCh4=0;
 
-// Prototype statements for functions found within this file.
-interrupt void cpu_timer0_isr(void); 
-interrupt void EPWM_1_INT(void);
-interrupt void SCIBRX_ISR(void);
-interrupt void INT3_ISR(void);
-void OutLoop_Control(void);
-void performance_metrics_update(float y);
-//void Init_SiShu(void);
-
-//*****************************************************************************************************
-//È«¾Ö±äÁ¿¶¨ÒåÓë³õÊ¼»¯
-//***************************************************************************************************** 
-float32 i=0;
-float32 j=0;
-float32 k=0;
-Uint16 IsrTicker = 0;
-Uint16 BackTicker = 0; //ÓÃÓÚ´ÎÊý¼ÆÊý
-Uint16 T1Period=0;     // T1¶¨Ê±Æ÷ÖÜÆÚ(Q0)
-Uint16 T3Period = 0;   
-float32 Modulation=0.25;    // µ÷ÖÆ±È
-int16 MPeriod=0;
-int32 Tmp=0;
-
-
-float32 MfuncF1=0;
-float32 MfuncF2=0;
-float32 MfuncF3=0;  
-//===============×ª×Ó³õÊ¼Î»ÖÃ¶¨Î»=============================  
+/*****×ªÓ³Ê¼****************/
 Uint16 LockRotorNum = 0;
-Uint16 LocationFlag=1;
-Uint16 LocationEnd=0; 
-Uint16 Position=1;
-Uint16 PositionPhase60=1;
-Uint16 PositionPhase120=2;
-Uint16 PositionPhase180=3; 
-Uint16 PositionPhase240=4;
-Uint16 PositionPhase300=5;
-Uint16 PositionPhase360=6;  
+float p_cycles_now=0;
+float p_cycles_old=0;
+float p_Speed=0;
 
-//===============DACÄ£Äâ===================================== 
-_iq DACTemp0=0;
-_iq DACTemp1=0;
-_iq DACTemp2=0; 
+float p_cycles_now1=0;
+float p_cycles_old1=0;
+float p_Speed1=0;
 
-_iq MfuncC1=0;
-_iq MfuncC2=0;
-_iq MfuncC3=0; 
-Uint16 ZhengFan=1;  
- 
-//===============×ª×ÓËÙ¶È¼ÆËã===================================== 
-Uint16 SpeedRefScaler = 500;     // ËÙ¶È»·¸ø¶¨µÄ±ä»¯ÖÜÆÚ
-Uint16 SpeedLoopCount = 1;          // ËÙ¶È»·¼ÆÊý  
-float32 SpeedRef=0;
-float32 SpdRef=0;
-_iq Speed=0;                        //ËÙ¶È£¬±êçÛÖµ
-_iq SpeedRpm=0;                     //ËÙ¶È£¬µ¥Î»£º×ª/Ã¿·ÖÖÓ
-Uint16 Hall_Fault=0;
-float32 Speed_rps=0;
-unsigned int t2_t1;
+float32 yk=0;
 
-//===============×ª×Ó½Ç¶È¼ÆËã===================================
-Uint16 DirectionQep=0;               //×ª×ÓÐý×ª·½Ïò
-Uint32 RawTheta=0;
-Uint32 OldRawTheta=0;
-float32 RawThetaTmp=0;
-
-float32 MechTheta = 0;             //»úÐµ½Ç¶È£¬µ¥Î»£º¶È-¡·Rev
-float32 ElecTheta = 0;             //µçÆø½Ç¶È£¬µ¥Î»£º¶È-¡·Rev
-_iq	AnglePU=0;                     //½Ç¶È±êçÛ»¯
-_iq	Cosine=0;
-_iq	Sine=0;
-
-
-//===============¿ØÖÆÈÆ×éµçÁ÷¼ÆËã============================ 
-_iq ia=0;
-_iq ib=0;
-_iq ic=0;
-_iq ialfa=0;
-_iq ibeta=0; 
-_iq id=0;
-_iq iq=0; 
-
-//===============PI¿ØÖÆÆ÷²ÎÊý¼ÆËã============================ 
-_iq ID_Given=0;
-_iq ID_Ref=0;
-_iq ID_Fdb=0;
-_iq ID_Error=0;  
-
-_iq ID_Up=0;
-_iq ID_Up1=0;
-_iq ID_Ui=0;
-_iq ID_OutPreSat=0;
-_iq ID_SatError=0;
-_iq ID_OutMax=_IQ(1);
-_iq ID_OutMin=_IQ(-1); 
-_iq ID_Out=0;
-
-_iq IQ_Given=0;
-_iq IQ_Ref=0;
-_iq IQ_Fdb=0;
-_iq IQ_Error=0; 
- 
-
-_iq IQ_Up=0;
-_iq IQ_Up1=0;
-_iq IQ_Ui=0;
-_iq IQ_OutPreSat=0;
-_iq IQ_SatError=0;
-_iq IQ_OutMax=_IQ(1);
-_iq IQ_OutMin=_IQ(-1); 
-_iq IQ_Out=0; 
-
-_iq Speed_Given=_IQ(0.2); //ËÙ¶È¸ø¶¨    ±êçÛÖµ 0.2==>600RPM£¬×î¸ß×ªËÙ1.0==>3000RPM
-_iq Speed_Ref=0;
-_iq Speed_Fdb=0;
-_iq Speed_Error=0; 
- 
-
-_iq Speed_Up=0;
-_iq Speed_Up1=0;
-_iq Speed_Ui=0;
-_iq Speed_OutPreSat=0;
-_iq Speed_SatError=0;
 _iq MaxOut=_IQ(0.99999);  //0.99999
 _iq MinOut=_IQ(-0.99999);
-_iq Speed_Out=0;  
+float32 UMAX=4.0;
+float32 ctrl_uk=0;
+float32 OutLoopCnt=0;
+float32 PosRefScaler=500;
+float32 PosRef=1.0;
+ {
+    InitSysCtrl();
+    InitGpio();
+    Pwm_EN_1;
+    DINT;
 
-//===============SVPWM¼ÆËã==================================== 
-Uint16 Sector = 0; 
-_iq	Ualfa=0;  		
-_iq	Ubeta=0;		
-_iq	Ud=0;		
-_iq	Uq=0;			
-_iq	B0=0;			
-_iq	B1=0;
-_iq	B2=0;
-_iq	X=0;
-_iq	Y=0;
-_iq	Z=0;
-_iq	t1=0;
-_iq	t2=0;
-_iq	Ta=0;
-_iq	Tb=0;
-_iq	Tc=0;
-_iq	MfuncD1=0;
-_iq	MfuncD2=0;
-_iq	MfuncD3=0; 
-//===================================================================
-Uint16 Run_PMSM=2;
-float32 TEMP2=0;
+    InitPieCtrl();
+    IER = 0x0000;
+    IFR = 0x0000;
 
-Uint16 speed_give=0;
-Uint16 HallAngle=0;
-
-
-Uint16 ShangDian_Err=0;
-
-// for 64W MOTOR
-//========================ËÙ¶È»·PI²ÎÊý=================================
-_iq Speed_Kp=_IQ(2.5);
-_iq Speed_Ki=_IQ(0.007);
-//=====================================================================
-
-//========================QÖáµçÁ÷»·PI²ÎÊý==============================
-_iq IQ_Kp=_IQ(0.1221);
-_iq IQ_Ki=_IQ(0.061);
-//=====================================================================
-
-//========================DÖáµçÁ÷»·PI²ÎÊý==============================
-_iq ID_Kp=_IQ(0.1221);
-_iq ID_Ki=_IQ(0.061);
-//=====================================================================
-
-// for 32W MOTOR
-////========================ËÙ¶È»·PI²ÎÊý=================================
-//_iq Speed_Kp=_IQ(8);
-//_iq Speed_Ki=_IQ(0.005);
-////=====================================================================
-//
-////========================QÖáµçÁ÷»·PI²ÎÊý==============================
-//_iq IQ_Kp=_IQ(0.3);
-//_iq IQ_Ki=_IQ(0.002);
-////=====================================================================
-//
-////========================DÖáµçÁ÷»·PI²ÎÊý==============================
-//_iq ID_Kp=_IQ(0.3);
-//_iq ID_Ki=_IQ(0.002);
-////=====================================================================
-
-//:::::::::::::::::::::::::::Î»ÖÃ»·±äÁ¿¶¨Òå:::::::::::::::::::::::::::
-Uint16 PosEnable=1;//Î»ÖÃ¿ØÖÆ Ê¹ÄÜ  1 Ê¹ÄÜ ;  0 -> µ÷ËÙ
-int32 PosRevCnt = 0; // in Rev
-float32 PosInRev = 0;
-float32 PosInit=0;
-float32 PosRef=1; //In Rev
-float32 PosErr=0;
-float32 pscale=2;
-int LoopCnt=0;
-Uint16 OutLoopScaler=20;
-int OutLoopCnt=0;
-Uint16 PosRefScaler=500; //600
-
-float32 Speed_pu;
-float32 speed_pu_m;
-float32 speed_pu_t;
-
-//===============performance=============================
-float32 overshoot = 0.0f;
-float32 steady_state_error = 0.0f;
-float32 rise_time = 0.0f;
-
-float32 y_max = 0.0f;
-float32 ref = 0;
-
-int sample_count = 0;
-int rise_flag = 0;
-float32 sample_period = 0.02;   // ²ÉÑùÖÜÆÚ£¬Ãë
-
-
-void main(void)
-{
-
-
-   InitSysCtrl();
- 
-   InitGpio(); 
-   Pwm_EN_1;
-
+   // InitCpuTimers();
+   //MemCopy(&RamfuncsLoadStart, &RamfuncsLoadEnd, &RamfuncsRunStart);
+   //InitFlash();
   
-   DINT;
+   InitEPwm_1_2_3();        //pwmÊ¼
+   QEP_Init();              //qepÊ¼
+   Init_SiShu();
  
-   InitPieCtrl(); 
-   IER = 0x0000;
-   IFR = 0x0000;
- 
-   InitPieVectTable();
- 
-   EALLOW;  // This is needed to write to EALLOW protected registers 
-  // PieVectTable.TINT0 = &cpu_timer0_isr; 
-   PieVectTable.EPWM1_INT=&EPWM_1_INT;
-   PieVectTable.SCIRXINTB= &SCIBRX_ISR;   //ÉèÖÃ´®¿ÚB½ÓÊÜÖÐ¶ÏµÄÖÐ¶ÏÏòÁ¿
-   PieVectTable.XINT3=&INT3_ISR;
-
-   EDIS;    // This is needed to disable write to EALLOW protected registers
- 
-
-   InitSci_C();
-   InitSci_B();
-   InitSpi();
-
-   
-/*
-   MemCopy(&RamfuncsLoadStart, &RamfuncsLoadEnd, &RamfuncsRunStart);
-   InitFlash();
-*/
-
-   InitEPwm_1_2_3();//pwm³õÊ¼»¯
-   QEP_Init(); //qep³õÊ¼»¯
-
-//   Init_SiShu();
-   ADC_Soc_Init();
-   
- 
-   eva_close();
-   Ad_CaiJi(); 
-   Ad_CaiJi(); 
-   Ad_CaiJi(); 
-   Ad_CaiJi(); 
-   Ad_CaiJi(); 
-   Ad_CaiJi(); 
-   
-
-   if(AD_BUF[7]<150)
-   {
-	   Pwm_EN_0;//ÔÊÐíPWMÊ¹ÄÜ
-
-   }
-   else
-   {
-	   Pwm_EN_1;//½ûÖ¹PWMÊ¹ÄÜ
-	   ShangDian_Err=1;
-
-   }
-    
-    
-    DELAY_US(1000000);
-    
-   
-   IER |= M_INT3;
-   IER |= M_INT9;
-   IER |= M_INT12;
-   //PieCtrlRegs.PIEIER1.bit.INTx7 = 1;//timer0
-   PieCtrlRegs.PIEIER3.bit.INTx1=1;//epwm1int
-   PieCtrlRegs.PIEIER9.bit.INTx3=1;//scib
-   PieCtrlRegs.PIEIER12.bit.INTx1=1;//xint3
-    
-   Init_lcd();
- 
-   EINT;   // Enable Global interrupt INTM
-   ERTM;   // Enable Global realtime interrupt DBGM
-    
-//   //eptos¿ØÖÆÂÉµÄ³õÊ¼»¯
-//   pos_ctrl.umax=UMAX;
-//   pos_ctrl.Ts=0.002;
-//   pos_ctrl.b=500;  // bÔ½´ó£¬³¬µ÷Ô½Ð¡£¬ÔËÐÐÔ½Æ½ÎÈ     //Ä£ÐÍ²ÎÊý
-//   pos_ctrl.a=-3;  // a<=0;
-//   pos_ctrl.zeta=0.85;  //ÏßÐÔ¿ØÖÆµÄ×èÄáÏµÊý
-//   pos_ctrl.omega=60;    //ÏßÐÔ¿ØÖÆµÄ×ÔÈ»ÆµÂÊ
-//   pos_ctrl.zeta0=0.8;  //¹Û²âÆ÷¼«µãµÄ×èÄáÏµÊý 0.7071
-//   pos_ctrl.omega0=200;    //¹Û²âÆ÷¼«µãµÄ×ÔÈ»ÆµÂÊ
-//   pos_ctrl.fd=0.5;    //ÈÅ¶¯²¹³¥µÄÎÈÌ¬ÏµÊý
-//   pos_ctrl.alpha=0.95;    //·ÇÏßÐÔº¯ÊýµÄ²ÎÊý
-//   pos_ctrl.init(&pos_ctrl);
+   eva_close();             //Î»Ø¼Æ±
+       Pwm_EN_0;//PWMÊ¹
+       Pwm_EN_1;//Ö¹PWMÊ¹
+       ShangDian_Err=1;
+   // Ê¼Ý¼Â¼Ä£   Initialize DATALOG module
+    dlog.iptr1 = &DlogCh1;
+    dlog.iptr2 = &DlogCh2;
+    dlog.iptr3 = &DlogCh3;
+    dlog.iptr4 = &DlogCh4;
+    dlog.trig_value = 1 ;   //CCSÃ¿Í¼Æ¶Ä¸  0x1
+    dlog.size = 0x400;     //ÝµÄ³È£Ò»É¼ 1024 
+    dlog.prescalar=3;      //CCSÍ¼Î²Æµ=1/prescalar/(1ms)Ð¶Ú£=1000Hz
+    dlog.init(&dlog);
 
 
-   //PTOS¿ØÖÆÂÉµÄ³õÊ¼»¯
-   pos_ctrl.umax=UMAX;
-   pos_ctrl.Ts=0.002;   // 0.001 or 0.002
-   //      pos_ctrl.a=-3;
-   pos_ctrl.b=500;  //Ä£ÐÍ²ÎÊý
-   pos_ctrl.a=-3;
-   pos_ctrl.alpha=0.95;  //
-   pos_ctrl.zeta=0.85;  //  ×èÄáÏµÊý
-   pos_ctrl.omega=60;//80;    //×ÔÈ»ÆµÂÊ
-   pos_ctrl.zeta0=0.80;  //¹Û²âÆ÷¼«µãµÄ×èÄáÏµÊý
-   pos_ctrl.omega0=120;//62;    //¹Û²âÆ÷¼«µãµÄ×ÔÈ»ÆµÂÊ
-   pos_ctrl.gama=0.85;//
-   pos_ctrl.lambda=3;
-   pos_ctrl.fd=0.3;    //ÈÅ¶¯²¹³¥µÄÎÈÌ¬ÏµÊý
-   pos_ctrl.init(&pos_ctrl);   //µ÷ÓÃ³õÊ¼»¯º¯Êý
+//    //eptosÉµÄ³Ê¼
+//    pos_ctrl.umax=UMAX;
+//    pos_ctrl.Ts=0.002;
+//    pos_ctrl.b=500;  // bÔ½ó£¬³Ô½Ð¡Ô½Æ½     //Ä£Í²
+//    pos_ctrl.a=-3;  // a<=0;
+//    pos_ctrl.zeta=0.85;  //Ô¿ÆµÏµ
+//    pos_ctrl.omega=60;    //Ô¿ÆµÈ»Æµ
+//    pos_ctrl.zeta0=0.8;  //Û²Ïµ 0.7071
+//    pos_ctrl.omega0=200;    //Û²È»Æµ
+//    pos_ctrl.fd=0.5;    //Å¶Ì¬Ïµ
+//    pos_ctrl.alpha=0.95;    //ÔºÄ²
+//    pos_ctrl.init(&pos_ctrl);
+
+    //PTOSÉµÄ³Ê¼
+    pos_ctrl.umax=UMAX;
+    pos_ctrl.Ts=0.002;   // 0.001 or 0.002
+    //      pos_ctrl.a=-3;
+    pos_ctrl.b=500;  //Ä£Í²
+    pos_ctrl.a=-3;
+    pos_ctrl.alpha=0.95;  //
+    pos_ctrl.zeta=0.85;  //  Ïµ
+    pos_ctrl.omega=60;//80;    //È»Æµ
+    pos_ctrl.zeta0=0.80;  //Û²Ïµ
+    pos_ctrl.omega0=120;//62;    //Û²È»Æµ
+    pos_ctrl.gama=0.85;//
+    pos_ctrl.lambda=3;
+    pos_ctrl.fd=0.3;    //Å¶Ì¬Ïµ
+    pos_ctrl.init(&pos_ctrl);   //Ã³Ê¼
 
 
-   // ³õÊ¼»¯Êý¾Ý¼ÇÂ¼Ä£¿é   Initialize DATALOG module
-   dlog.iptr1 = &DlogCh1;
-   dlog.iptr2 = &DlogCh2;
-   dlog.iptr3 = &DlogCh3;
-   dlog.iptr4 = &DlogCh4;
-   dlog.trig_value = 0.01 ;//CCSÃ¿´ÎÍ¼ÏñÒÆ¶¯µÄ¸öÊý  0x1
-   dlog.size = 0x400;    //Êý¾ÝµÄ³¤¶È
-   dlog.prescalar=1;     //CCSÍ¼ÐÎ²ÉÑùÆµÂÊ=1/prescalar/(1ms)£¨Ö÷ÖÐ¶ÏÖÜÆÚ£©=1000Hz
-   dlog.init(&dlog);
+   DELAY_US(1000000);
 
+   //Ð¶Ê¹
+   Init_lcd();//Ê¼Ê¾
 
-   for(;;)
-   {
-	   //        CPU_RUN();
-	   DC_Link();
-	   deal_key();
-	   LCD_DIS();
+       //SpeedRef = 0.1;
+     {
+        //CPU_RUN();
+        DC_Link();
+        deal_key();//Ð¶Ï¶Ä°Ð¶Ï£Ò»ÏµÐµÄ²
+        LCD_DIS();// LCD Ê¾Í¬Ï¢
+        //TX232_ChuLi();
 
-	   //	    TX232_ChuLi();
-	   //		OutLoop_Control();
-
-
-   }
-
+     }
 }
-
-void  QEP_Init(void)
-{
-
-
-//    EALLOW;
-    EQep1Regs.QUPRD=1500000;		// Unit Timer for 100Hz at 150 MHz SYSCLKOUT
-
-    EQep1Regs.QDECCTL.all=0x00;
-    EQep1Regs.QEPCTL.all=0x820a;
-
-//    EQep1Regs.QDECCTL.all=0x400;
-//    EQep1Regs.QEPCTL.all=0x900a;
-
-    //EQep1Regs.QEPCTL.all=0x920a;
-
-//    EQep1Regs.QDECCTL.bit.QSRC=0x00;		// QEP quadrature count mode
-//    EQep1Regs.QEPCTL.bit.FREE_SOFT=2;
-//    EQep1Regs.QEPCTL.bit.PCRM=0x01;  		// PCRM=00 mode - QPOSCNT reset on index event
-//    EQep1Regs.QEPCTL.bit.UTE=1; 		// Unit Timeout Enable
-//    EQep1Regs.QEPCTL.bit.QCLM=1; 		// Latch on unit time out
-//    EQep1Regs.QEPCTL.bit.QPEN=1; 		// QEP enable
-
-    EQep1Regs.QPOSCNT=0;
-    EQep1Regs.QPOSINIT=0;
-//    TotalPulse=_IQmpy(_IQ(4),LineEncoder);
-    EQep1Regs.QPOSMAX= MaxPulses;
-    		//(Uint16)(TotalPulse>>15);
-    EQep1Regs.QCAPCTL.all=0x8075;
-
-//	EQep1Regs.QCAPCTL.bit.UPPS=5;   	// 1/32 for unit position
-//	EQep1Regs.QCAPCTL.bit.CCPS=7;		// 1/128 for CAP clock
-//	EQep1Regs.QCAPCTL.bit.CEN=1; 		// QEP Capture Enable//    EDIS;
-
-
-
-}
-
 interrupt void EPWM_1_INT(void)
 {
-
-	IPM_BaoHu();
-	Show_time++;
-	Show_time2++;
-	if(Show_time2==1000)//1Ãë
-	{
-		Show_time2=0;
-		lcd_dis_flag=1;
-
-	}
-
-
-	Read_key();
-	Ad_CaiJi();
-	JiSuan_Dl();
-	JiSuan_AvgSpeed();
-
+       _iq t_01,t_02;
+       //IPM_BaoHu();
     
-
+   
+  Read_key();//È¡Ï¢------Ð¶Ä¸
+  Ad_CaiJi(); //É¼ia,ib,ic;ÚºClark,Parkä»¯Ò»Ãµiqid
+  //JiSuan_Dl();//Ô²É¼ÄµÐ¼ã£¬Ð¶Ç·
 if(Run_PMSM==1&&IPM_Fault==0)
-{
 
-	//DAC1_out(_iq data);  ×¢Òâ data ÊÇ±êÃ´ÖµÅ¶  dacÖ»ÄÜÊä³ö0µ½5vÕýµçÑ¹ ,Èç¹ûdataÐ¡ÓÚ0 ¾Í»áÊä³öÎª0
+     if(LocationFlag == TRUE)    //×ªÒªÊ¼Ê¼
+      {
+          if(LockRotorNum < 25000)//35000
+          {
+              LockRotorNum ++;
+              if(LockRotorNum < 9500)       //25000Î»×ª
+              {
+                  //Ö±PWMÄ±È½Ï¼Ä´CMPAÖµ--------PWMÕ¼Õ±È²Õ¼Ñ¹Ê¸Ê¹×ªÓµÖ¸Î»
+                  EPwm1Regs.CMPA.half.CMPA = 1321;
+                  EPwm2Regs.CMPA.half.CMPA = 652;
+                  EPwm3Regs.CMPA.half.CMPA = 652;
+                  /*EPwm1Regs.CMPA.half.CMPA = 2337;
+                  EPwm2Regs.CMPA.half.CMPA = 1412;
+                  EPwm3Regs.CMPA.half.CMPA = 1412;*/
 
-	//DAC1_out(Speed_Fdb);//Êä³öËÙ¶È·´À¡
-	//DAC2_out(IQ_Fdb);//Êä³öiQ·´À¡µçÁ÷
-	//void LuBo(_iq Ch1,_iq Ch2,_iq Ch3,_iq Ch4)//²ÎÊý¶¼ÊÇ±êÃ´Öµ Q¸ñÊ½,ÖªµÀÔõÃ´ÓÃÁË°É
-	//----ch1--ch2-ch3-ch4
+              }
+              else                          //×¡×ªÓ¡Ö¹Å¶
+              {
+                  EPwm1Regs.CMPA.half.CMPA = 3375;
+                  EPwm2Regs.CMPA.half.CMPA = 3375;
+                  EPwm3Regs.CMPA.half.CMPA = 3375;
+              }
+          }
+          else
+          {
+              EQep1Regs.QPOSCNT = 0;//Î»
+              LocationFlag = FALSE; //LocationFlag = FALSE ×ªÓ³Ê¼Ï£Ê¼Õ»
+              Modulation=0.95;// PWM  95%
+          }
 
-	//LuBo(ia, ib, ic,Speed);
+      }
 
-
- // DAC1_out(ID_Fdb);//Êä³öiD·´À¡µçÁ÷
-
-
+        
 //=====================================================================================================
-//³õÊ¼Î»ÖÃ¶¨Î»½áÊø£¬¿ªÊ¼±Õ»·¿ØÖÆ
+//Ê¼Î»Ã¶Î»Ê¼Õ»
 //=====================================================================================================
-//
-//	if(LocationFlag!=LocationEnd)
-//	{
-//		Modulation=0.95;
-//		HallAngle=0;
-//		if(GpioDataRegs.GPCDAT.bit.GPIO78) //W
-//		{
-//			HallAngle+=1;
-//		}
-//		if(GpioDataRegs.GPCDAT.bit.GPIO77) //V
-//		{
-//			HallAngle+=2;
-//		}
-//
-//		if(GpioDataRegs.GPCDAT.bit.GPIO76) //U
-//		{
-//			HallAngle+=4;
-//		}
-//		switch(HallAngle)
-//		{
-//		case 5:
-//			Position=PositionPhase60;
-//			OldRawTheta =SectorWidth*0+SectorWidth/2;
-//			break;
-//
-//		case 1:
-//			Position=PositionPhase360;
-//			OldRawTheta =SectorWidth*5+SectorWidth/2;
-//			break;
-//
-//		case 3:
-//			Position=PositionPhase300;
-//			OldRawTheta =SectorWidth*4+SectorWidth/2;
-//			break;
-//
-//		case 2:
-//			Position=PositionPhase240;
-//			OldRawTheta =SectorWidth*3+SectorWidth/2;
-//			break;
-//
-//		case 6:
-//			Position=PositionPhase180;
-//			OldRawTheta =SectorWidth*2+SectorWidth/2;
-//			break;
-//
-//		case 4:
-//			Position=PositionPhase120;
-//			OldRawTheta =SectorWidth+SectorWidth/2;
-//			break;
-//
-//		default:
-//			DC_ON_1;
-//			Run_PMSM=2;
-//			eva_close();
-//			Hall_Fault=1;//»ô¶ûÐÅºÅ´íÎóÆô¶¯Í£Ö¹
-//			break;
-//		}
-//        LocationFlag=LocationEnd;//¶¨Î»½áÊø
-//        EQep1Regs.QPOSCNT=0;
-//        PosInit=(float)PosRevScale*(float)OldRawTheta;
-//        OldRawTheta=0;
-//	}
-
-
-	if(LocationFlag!=LocationEnd)    //LocationFlag = TRUE ´ú±í×ª×ÓÒª¿ªÊ¼³õÊ¼»¯
-	      {
-	          if(LockRotorNum < 25000)//35000
-	          {
-	              LockRotorNum ++;
-	              if(LockRotorNum < 9500)//25000
-	              {
-
-	                  EPwm1Regs.CMPA.half.CMPA = 1321;
-	                  EPwm2Regs.CMPA.half.CMPA = 652;
-	                  EPwm3Regs.CMPA.half.CMPA = 652;
-	                  /*EPwm1Regs.CMPA.half.CMPA = 2337;
-	                  EPwm2Regs.CMPA.half.CMPA = 1412;
-	                  EPwm3Regs.CMPA.half.CMPA = 1412;*/
-
-	              }
-	              else
-	              {
-	                  EPwm1Regs.CMPA.half.CMPA = 3375;
-	                  EPwm2Regs.CMPA.half.CMPA = 3375;
-	                  EPwm3Regs.CMPA.half.CMPA = 3375;
-	              }
-	          }
-	          else
-	          {
-	              LocationFlag=LocationEnd;//¶¨Î»½áÊø
-                  EQep1Regs.QPOSCNT=0;
-                  OldRawTheta=0;
-	          }
-
-	      }
-
-
-//=====================================================================================================
-//³õÊ¼Î»ÖÃ¶¨Î»½áÊø£¬¿ªÊ¼±Õ»·¿ØÖÆ
-//=====================================================================================================
-	else if(LocationFlag==LocationEnd)
-	{  
-
+    if(LocationFlag == FALSE)
+    {
 //======================================================================================================
-//QEP×ª×Ó½Ç¶È¼ÆËã
+//QEPÇ¶È¼
 //====================================================================================================== 
-//		DirectionQep = EQep1Regs.QEPSTS.bit.QDF;
-        RawTheta = EQep1Regs.QPOSCNT;
+// ×ªÐ¶ 
+        DirectionQep = EQep1Regs.QEPSTS.bit.QDF;//QDFDirection FlagÎ»Ê¾×ªÓµ×ª
 
-		MechTheta = (float)PosRevScale*(float)RawTheta;  //µ¥Î»ÊÇÈ¦Êý
-
-//        if(MechTheta>360)
-//        {MechTheta=MechTheta-360;}
-//         if(MechTheta<-360)
-//        {MechTheta=MechTheta+360;}
-
-		ElecTheta = -MechTheta*PolePairs;
-	
-//		AnglePU =_IQmpy(_IQ(MechTheta),_IQ(PolePairs));
-		AnglePU =_IQ(ElecTheta);
-
-	   	Sine = _IQsinPU(AnglePU);
-	   	Cosine = _IQcosPU(AnglePU);    
-
-	   	LoopCnt++;
-
-	   	OutLoop_Control();
-
-// µçÁ÷ÄÚ»·¿ØÖÆ
-	    ialfa=ia;
-		ibeta=_IQmpy(ia,_IQ(0.57735026918963))+_IQmpy(ib,_IQ(1.15470053837926));
-
-		id = _IQmpy(ialfa,Cosine) + _IQmpy(ibeta,Sine);
-		iq = _IQmpy(ibeta,Cosine) - _IQmpy(ialfa,Sine) ;
+        RawTheta = _IQ(EQep1Regs.QPOSCNT);//È¡QEPÔ­Ê¼Öµ
+        if(DirectionQep ==1) //Ë³Ê±ë£»
+        {
+            if((OldRawThetaPos>_IQ(3900)) && (RawTheta<_IQ(900)))   //Ó½Ó½Öµ3900ÆµÐ¡ÖµÐ¡900Ê±Ê¾×ª×ªÒ»È¦
+            {
+                PosCount += TotalCnt;
+            }
+            Place_now= _IQtoF(RawTheta)+PosCount;
+            OldRawThetaPos = RawTheta;
+        }
+        else if(DirectionQep ==0)//Ý¼Ê±
+        {
+            if((RawTheta>_IQ(3000)) && (OldRawThetaPos<_IQ(1000)))
+            {
+                PosCount -= TotalCnt;
+            }
+            Place_now = _IQtoF(RawTheta)+PosCount;
+            OldRawThetaPos = RawTheta;
+        }
+        MechTheta = _IQmpy(2949,RawTheta);//2949Q15Ê½×ªÎªÍ¼Îª2949/32768=0.09Ò»QCLKÄ½Ç¶Îª360/4000=0.09
+        //ÎªÖ¹ÐµÇ¶È³360È»ß¸360
+        if(MechTheta>_IQ(360))
+        {MechTheta=MechTheta-_IQ(360);}
+        if(MechTheta<_IQ(-360))
+        {MechTheta=MechTheta+_IQ(360);}
+        //Ï½Ö¹
+        //É»ÐµÇ¶ÈµÃ³Ç¶,×¢Ç¶Ç¿Ô´360ÎªIQ15Ö»Ü±Ê¾-1-1Ö®ä£¬Ô¶È¡Ð¡Ö£Ò²Ê¹ÃµÇ¶Ð¡360. ÚºparkÈ±ä»¯
+        ElecTheta = _IQmpy(PolePairs,MechTheta);
+        AnglePU=_IQdiv(ElecTheta,_IQ(360)); //Ç¶ÈµÄ±Û»
+        Sine = _IQsinPU(AnglePU);           // Ç¶È¶Ó¦Öµ
+        Cosine = _IQcosPU(AnglePU);         // Ç¶È¶Ó¦Öµ
 //======================================================================================================
-//IQµçÁ÷PIDµ÷½Ú¿ØÖÆ
-//======================================================================================================
-		IQ_Ref=IQ_Given;
-		IQ_Fdb=iq;
+//QEPÙ¶È¼
+//====================================================================================================== 
+        if (SpeedLoopCount>=SpeedLoopPrescaler)//Ð¶Ç·ïµ½Ö´Î»Ã¿Æ¼Ê±
+        {
+            OldRawTheta = NewRawTheta;//Ò»ÚµÄ±Î»
+            SpeedLoopCount=1;
+            RawThetaTmp=0;
+//=================Î»Ã¿(Ö¸Ä£Ô¼)===================================
+            //Î»Ã¿Æ²Î¿ pos_ctrl.Ref  0  PosRef Ö®Ð»
+            OutLoopCnt++;
 
-		IQ_Error=IQ_Ref-IQ_Fdb;
+            if (OutLoopCnt>=PosRefScaler)
+            {
+                OutLoopCnt=0 ;
+                if (pos_ctrl.Ref == 0)
+                    pos_ctrl.Ref = PosRef ;
+                else
+                    pos_ctrl.Ref = 0;
 
-		IQ_Up=_IQmpy(IQ_Kp,IQ_Error);
-		IQ_Ui=IQ_Ui + _IQmpy(IQ_Ki,IQ_Up) + _IQmpy(IQ_Ki,IQ_SatError);
+                pscale=fabs(2.0*PosRef);
+                if (pscale<0.5)
+                    pscale=1;
+            }
+            //Ñ±Î»Öµ×ªÉ»ÐµÇ¶È»ß±Î»Ã·
+             yk= Place_now*0.00025;//(Place_now*0.09)/360 = 0.00025;
+                           //rk = v_Ref * 2 * pi;
+                           //c_count = sin( 5 * v_tk);
+                           //rk = pi * c_count;
+             //pos_ctrl.vk=p_Speed/60;
+             pos_ctrl.Fdb = yk;             // Î»Ã·ÖµÇ°×ªÓµÎ»
+             pos_ctrl.calc(&pos_ctrl);      // Î»Ã¿ãº¯Ý²Î¿Í·
+             ctrl_uk = pos_ctrl.Out;        // UMAX;È¡Î»Ã¿Öµ
 
-		IQ_OutPreSat=IQ_Up+IQ_Ui;
+             IQ_Given =_IQdiv(_IQ(ctrl_uk),_IQ(UMAX));  //Î»Ã¿ÅºÅ¹Ò»
+             if (IQ_Given>MaxOut)
+                 IQ_Given=MaxOut;
+             else if(IQ_Given<MinOut)
+                 IQ_Given=MinOut;
+             performance_metrics_update(yk);
+//=================Ê¾Ä£===================================
+            Speed_run=1;
+//          DlogCh1=(int16)_IQ15(pos_ctrl.vk/100);
+//          DlogCh2=(int16)_IQ15(yk/PosRef/2);
+//          DlogCh3=(int16)_IQ15(pos_ctrl.dk/4);
+//          DlogCh4=(int16)(IQ_Given);
+//            dlog.update(&dlog);
+            DlogCh1=(int16)IQ_Given;  //_IQ15(ctrl_uk)
+            DlogCh2=(int16)_IQ15(pos_ctrl.Fdb/pscale);
+            DlogCh3=(int16)_IQ15(pos_ctrl.vk/50);
+            DlogCh4=(int16)_IQ15(pos_ctrl.dk/UMAX);
+            dlog.update(&dlog);
+        }
+        else
+        {
+            SpeedLoopCount++;
+        }
 
-		if(IQ_OutPreSat>IQ_OutMax)
-			IQ_Out=IQ_OutMax;
-		else if(IQ_OutPreSat<IQ_OutMin)
-		 	IQ_Out=IQ_OutMin;
-		else
-			IQ_Out=IQ_OutPreSat;
+        //Clarkeä»» + Parkä»» ÏµÄ¼Ê½
+        ialfa=ia;
+        ibeta=_IQmpy(ia,_IQ(0.57735026918963))+_IQmpy(ib,_IQ(1.15470053837926));
+        id = _IQmpy(ialfa,Cosine) +_IQmpy(ibeta,Sine);
+        iq = _IQmpy(ibeta,Cosine)- _IQmpy(ialfa,Sine);
+        IQ_Ref=IQ_Given;
+        IQ_Fdb=iq;
+        IQ_Error=IQ_Ref-IQ_Fdb;
+        IQ_Up=_IQmpy(IQ_Kp,IQ_Error);           //
+        IQ_Ui=IQ_Ui + _IQmpy(IQ_Ki,IQ_Up);      //Ô±
+        IQ_OutPreSat=IQ_Up+IQ_Ui;
+        if(IQ_OutPreSat>IQ_OutMax)
+            IQ_Out=IQ_OutMax;
+        else if(IQ_OutPreSat<IQ_OutMin)
+            IQ_Out=IQ_OutMin;
+        else
+            IQ_Out=IQ_OutPreSat;
 
-		IQ_SatError=IQ_Out-IQ_OutPreSat;
 
-		Uq=IQ_Out;
+        Uq=IQ_Out;
 
-//======================================================================================================
-//IDµçÁ÷PIDµ÷½Ú¿ØÖÆ
-//======================================================================================================
-		ID_Ref=ID_Given;
-		ID_Fdb=id;
+//======================================================================================================  
+        ID_Ref=ID_Given;
+        ID_Fdb=id;
 
-		ID_Error=ID_Ref-ID_Fdb;
+        ID_Error=ID_Ref-ID_Fdb;
+        ID_Up=_IQmpy(ID_Kp,ID_Error);
+        ID_Ui=ID_Ui+_IQmpy(ID_Ki,ID_Up);
+        ID_OutPreSat=ID_Up+ID_Ui;
+        if(ID_OutPreSat>ID_OutMax)
+            ID_Out=ID_OutMax;
+        else if(ID_OutPreSat<ID_OutMin)
+            ID_Out=ID_OutMin;
+        else
+            ID_Out=ID_OutPreSat;
 
-		ID_Up=_IQmpy(ID_Kp,ID_Error);
-		ID_Ui=ID_Ui+_IQmpy(ID_Ki,ID_Up)+_IQmpy(ID_Ki,ID_SatError);
+        Ud=ID_Out;
+//====================================================================================================== 
+        Ualfa = _IQmpy(Ud,Cosine) - _IQmpy(Uq,Sine);
+        Ubeta = _IQmpy(Uq,Cosine) + _IQmpy(Ud,Sine);
+//SVPWMÊµ
+//====================================================================================================== 
+        //à¾²Ö¹Ïµ-Â£ÐµÄµÑ¹ Ualfa, Ubeta Í¶Ó°Ïµ B0B1B2 
+        B1=_IQmpy(_IQ(0.8660254),Ualfa)- _IQmpy(_IQ(0.5),Ubeta);// 0.8660254 = sqrt(3)/2
+        B2=_IQmpy(_IQ(-0.8660254),Ualfa)- _IQmpy(_IQ(0.5),Ubeta); // 0.8660254 = sqrt(3)/2
 
-		ID_OutPreSat=ID_Up+ID_Ui;
+        //ÏµÐ¶
+        Sector=0;
+        if(B0>_IQ(0)) Sector =1;
+        if(B1>_IQ(0)) Sector =Sector +2;
+        if(B2>_IQ(0)) Sector =Sector +4;
 
-		if(ID_OutPreSat>ID_OutMax)
-			ID_Out=ID_OutMax;
-		else if(ID_OutPreSat<ID_OutMin)
-		 	ID_Out=ID_OutMin;
-		else
-			ID_Out=ID_OutPreSat;
+        //Ú¼Õ¼Õ±
+        X=Ubeta;//va
+        Y=_IQmpy(_IQ(0.8660254),Ualfa)+ _IQmpy(_IQ(0.5),Ubeta);// 0.8660254 = sqrt(3)/2 vb
+        Z=_IQmpy(_IQ(-0.8660254),Ualfa)+ _IQmpy(_IQ(0.5),Ubeta); // 0.8660254 = sqrt(3)/2 vc
 
-		ID_SatError=ID_Out-ID_OutPreSat;
 
-		Ud=ID_Out;
+            if(Sector==1)
+            {
+                t_01=Z;
+                t_02=Y;
 
-//======================================================================================================
-//IPark±ä»»
-//======================================================================================================
-		Ualfa = _IQmpy(Ud,Cosine) - _IQmpy(Uq,Sine);
-		Ubeta = _IQmpy(Uq,Cosine) + _IQmpy(Ud,Sine);
+                if((t_01+t_02)>_IQ(1))
+                {
+                    t1=_IQmpy(_IQdiv(t_01, (t_01+t_02)),_IQ(1));
+                    t2=_IQmpy(_IQdiv(t_02, (t_01+t_02)),_IQ(1));
+                }
+                else
+                {
+                    t1=t_01;
+                    t2=t_02;
+                }
 
-//======================================================================================================
-//SVPWM ÊµÏÖ
-//======================================================================================================
-        B0=Ubeta;
-		B1=_IQmpy(_IQ(0.8660254),Ualfa)- _IQmpy(_IQ(0.5),Ubeta); // 0.8660254 = sqrt(3)/2
-		B2=_IQmpy(_IQ(-0.8660254),Ualfa)- _IQmpy(_IQ(0.5),Ubeta); // 0.8660254 = sqrt(3)/2
+                //t0/2 + t1 + t2 + t0/2 = T
+                Tb=_IQmpy(_IQ(0.5),(_IQ(1)-t1-t2));
+                Ta=Tb+t1;
+                Tc=Ta+t2;
+            }
+        else if(Sector==2)
+        {
+            t_01=Y;
+            t_02=-X;
 
-		Sector=0;
-		if(B0>_IQ(0)) Sector =1;
-		if(B1>_IQ(0)) Sector =Sector +2;
-		if(B2>_IQ(0)) Sector =Sector +4;
+            if((t_01+t_02)>_IQ(1))
+            {
+                t1=_IQmpy(_IQdiv(t_01, (t_01+t_02)),_IQ(1));
+                t2=_IQmpy(_IQdiv(t_02, (t_01+t_02)),_IQ(1));
+            }
+            else
+            {
+                t1=t_01;
+                t2=t_02;
+            }
 
-		X=B0;  // va
-		Y=-B2; // 0.8660254 = sqrt(3)/2
-		Z=-B1;
+            Ta=_IQmpy(_IQ(0.5),(_IQ(1)-t1-t2));
+            Tc=Ta+t1;
+            Tb=Tc+t2;
+        }
+        else if(Sector==3)
+        {
+            t_01=-Z;
+            t_02=X;
 
-		if(Sector==1)
-		{
-			t1=Z;
-			t2=Y;
+            if((t_01+t_02)>_IQ(1))
+            {
+                t1=_IQmpy(_IQdiv(t_01, (t_01+t_02)),_IQ(1));
+                t2=_IQmpy(_IQdiv(t_02, (t_01+t_02)),_IQ(1));
+            }
+            else
+            {
+                t1=t_01;
+                t2=t_02;
+            }
 
-			if((t1+t2)>_IQ(1))
-			{
-				t1=_IQdiv(t1, (t1+t2));
-				t2=_IQ(1)-t1;
-			}
+            Ta=_IQmpy(_IQ(0.5),(_IQ(1)-t1-t2));
+            Tb=Ta+t1;
+            Tc=Tb+t2;
+        }
+        else if(Sector==4)
+        {
+            t_01=-X;
+            t_02=Z;
 
-			Tb=_IQmpy(_IQ(0.5),(_IQ(1)-t1-t2));
-			Ta=Tb+t1;
-			Tc=Ta+t2;
-		}
-		else if(Sector==2)
-		{
-			t1=Y;
-			t2=-X;
+            if((t_01+t_02)>_IQ(1))
+            {
+                t1=_IQmpy(_IQdiv(t_01, (t_01+t_02)),_IQ(1));
+                t2=_IQmpy(_IQdiv(t_02, (t_01+t_02)),_IQ(1));
+            }
+            else
+            {
+                t1=t_01;
+                t2=t_02;
+            }
 
-			if((t1+t2)>_IQ(1))
-			{
+            Tc=_IQmpy(_IQ(0.5),(_IQ(1)-t1-t2));
+            Tb=Tc+t1;
+            Ta=Tb+t2;
+        }
+        else if(Sector==5)
+        {
+            t_01=X;
+            t_02=-Y;
+
+            if((t_01+t_02)>_IQ(1))
+            {
+                t1=_IQmpy(_IQdiv(t_01, (t_01+t_02)),_IQ(1));
+                t2=_IQmpy(_IQdiv(t_02, (t_01+t_02)),_IQ(1));
+            }
+            else
+            {
+                t1=t_01;
+                t2=t_02;
+            }
+
+            Tb=_IQmpy(_IQ(0.5),(_IQ(1)-t1-t2));
+            Tc=Tb+t1;
+            Ta=Tc+t2;
+        }
+        else if(Sector==6)
+        {
+            t_01=-Y;
+            t_02=-Z;
+
+            if((t_01+t_02)>_IQ(1))
+            {
+                t1=_IQmpy(_IQdiv(t_01, (t_01+t_02)),_IQ(1));
+                t2=_IQmpy(_IQdiv(t_02, (t_01+t_02)),_IQ(1));
+            }
+            else
+            {
+                t1=t_01;
+                t2=t_02;
+            }
+
+            Tc=_IQmpy(_IQ(0.5),(_IQ(1)-t1-t2));
+            Ta=Tc+t1;
+            Tb=Ta+t2;
+        }
+
+        //  PWM Õ¼Õ±Ê¼Ê±×ªÎªÄ¶ PWM È½----[-1,1]
+        MfuncD1=_IQmpy(_IQ(2),(_IQ(0.5)-Ta));
+        MfuncD2=_IQmpy(_IQ(2),(_IQ(0.5)-Tb));
+        MfuncD3=_IQmpy(_IQ(2),(_IQ(0.5)-Tc));
+//EVAÈ«È½Öµ
+//====================================================================================================== 
+    MPeriod = (int16)(T1Period * Modulation);              // Q0 = (Q0 * Q0)
+    Tmp = (int32)MPeriod * (int32)MfuncD1;                    // Q15 = Q0*Q15È«È½CMPR1Öµ
+     EPwm1Regs.CMPA.half.CMPA = (int16)(Tmp>>16) + (int16)(T1Period>>1); // Q0 = (Q15->Q0)/2 + (Q0/2)
+    Tmp = (int32)MPeriod * (int32)MfuncD2;                    // Q15 = Q0*Q15È«È½CMPR2Öµ
+     EPwm2Regs.CMPA.half.CMPA = (int16)(Tmp>>16) + (int16)(T1Period>>1); // Q0 = (Q15->Q0)/2 + (Q0/2)
+    Tmp = (int32)MPeriod * (int32)MfuncD3;                    // Q15 = Q0*Q15È«È½CMPR3Öµ
+     EPwm3Regs.CMPA.half.CMPA = (int16)(Tmp>>16) + (int16)(T1Period>>1); // Q0 = (Q15->Q0)/2 + (Q0/2)
+         
+    }
+    }
+        if(U_dc_dis<10)//Ö´Í£
+        {
+        eva_close();
+        Run_PMSM=2;
+        DC_ON_flag=0;
+        }
+/*interrupt void SCIBRX_ISR(void)     // SCI-B
+
+    PieCtrlRegs.PIEACK.bit.ACK9 = 1;
+}*/
+void Init_SiShu(void)
+ GuoliuZhi=15*E_Ding_DianLiu;
+ E_Ding_DianLiu=1.414*E_Ding_DianLiu;
+ }
+    y_max = 0;
 				t1=_IQdiv(t1, (t1+t2));
 				t2=_IQ(1)-t1;
 			}
@@ -765,17 +615,17 @@ if(Run_PMSM==1&&IPM_Fault==0)
 		MfuncD3=_IQmpy(_IQ(2),(_IQ(0.5)-Tc));
 
 //======================================================================================================
-//PWMÈ«±È½ÏÆ÷²ÎÊý¸³Öµ£¬ÓÃÓÚÇý¶¯µç»ú
+//PWMå…¨æ¯”è¾ƒå™¨å‚æ•°èµ‹å€¼ï¼Œç”¨äºŽé©±åŠ¨ç”µæœº
 //======================================================================================================
 	MPeriod = (int16)(T1Period * Modulation);              // Q0 = (Q0 * Q0)
 
-	Tmp = (int32)MPeriod * (int32)MfuncD1;                    // Q15 = Q0*Q15£¬¼ÆËãÈ«±È½ÏÆ÷CMPR1¸³Öµ
+	Tmp = (int32)MPeriod * (int32)MfuncD1;                    // Q15 = Q0*Q15ï¼Œè®¡ç®—å…¨æ¯”è¾ƒå™¨CMPR1èµ‹å€¼
 	 EPwm1Regs.CMPA.half.CMPA = (int16)(Tmp>>16) + (int16)(T1Period>>1); // Q0 = (Q15->Q0)/2 + (Q0/2)
 
-	Tmp = (int32)MPeriod * (int32)MfuncD2;                    // Q15 = Q0*Q15£¬¼ÆËãÈ«±È½ÏÆ÷CMPR2¸³Öµ
+	Tmp = (int32)MPeriod * (int32)MfuncD2;                    // Q15 = Q0*Q15ï¼Œè®¡ç®—å…¨æ¯”è¾ƒå™¨CMPR2èµ‹å€¼
 	 EPwm2Regs.CMPA.half.CMPA = (int16)(Tmp>>16) + (int16)(T1Period>>1); // Q0 = (Q15->Q0)/2 + (Q0/2)
 
-	Tmp = (int32)MPeriod * (int32)MfuncD3;                    // Q15 = Q0*Q15£¬¼ÆËãÈ«±È½ÏÆ÷CMPR3¸³Öµ
+	Tmp = (int32)MPeriod * (int32)MfuncD3;                    // Q15 = Q0*Q15ï¼Œè®¡ç®—å…¨æ¯”è¾ƒå™¨CMPR3èµ‹å€¼
 	 EPwm3Regs.CMPA.half.CMPA = (int16)(Tmp>>16) + (int16)(T1Period>>1); // Q0 = (Q15->Q0)/2 + (Q0/2)
 
 	}
@@ -786,7 +636,7 @@ if(Run_PMSM==1&&IPM_Fault==0)
 if(DC_ON_flag==1)
 {
 
-	if(U_dc_dis<10)//Ö´ÐÐÍ£»úÃüÁî
+	if(U_dc_dis<10)//æ‰§è¡Œåœæœºå‘½ä»¤
 	{
 		eva_close();
 		Run_PMSM=2;
@@ -797,7 +647,7 @@ if(DC_ON_flag==1)
 }
 
 
-EPwm1Regs.ETCLR.bit.INT=1;//Çå³ýÖÐ¶Ï±êÖ¾Î»
+EPwm1Regs.ETCLR.bit.INT=1;//æ¸…é™¤ä¸­æ–­æ ‡å¿—ä½
 PieCtrlRegs.PIEACK.all = PIEACK_GROUP3;
 
 }
@@ -812,7 +662,7 @@ interrupt void SCIBRX_ISR(void)     // SCI-B
 }
 
 
-//=================Íâ»·¿ØÖÆ===================================
+//=================å¤–çŽ¯æŽ§åˆ¶===================================
 void OutLoop_Control(void)
 { 
 	float32 ctrl_uk=0;
@@ -826,14 +676,14 @@ void OutLoop_Control(void)
 	LoopCnt=0;
 
 //======================================================================================================
-//QEPËÙ¶È¼ÆËã
+//QEPé€Ÿåº¦è®¡ç®—
 //======================================================================================================
-	// Ðý×ª·½ÏòÅÐ¶¨
+	// æ—‹è½¬æ–¹å‘åˆ¤å®š
 	DirectionQep = EQep1Regs.QEPSTS.bit.QDF;
-	// ¼ÆËã»úÐµ½Ç¶È
+	// è®¡ç®—æœºæ¢°è§’åº¦
 	RawThetaTmp = (float)RawTheta - (float)OldRawTheta;
 
-	if(DirectionQep ==1) //µÝÔö¼ÆÊý£¬´ú±íË³Ê±Õë£»
+	if(DirectionQep ==1) //é€’å¢žè®¡æ•°ï¼Œä»£è¡¨é¡ºæ—¶é’ˆï¼›
 	{
 
 		if((OldRawTheta>(MaxPulses-1000)) && (RawTheta<1000))
@@ -842,7 +692,7 @@ void OutLoop_Control(void)
 			PosRevCnt++;    //+= TotalCnt
 		}
 	}
-	else //µÝ¼õ¼ÆÊý£¬´ú±íÄæÊ±Õë   if(DirectionQep ==0)
+	else //é€’å‡è®¡æ•°ï¼Œä»£è¡¨é€†æ—¶é’ˆ   if(DirectionQep ==0)
 	{
 
 		if((RawTheta>(MaxPulses-1000)) && (OldRawTheta<1000))
@@ -857,7 +707,7 @@ void OutLoop_Control(void)
 	speed_pu_m = (float)SpeedScale*(float)RawThetaTmp;
 	Speed = _IQ(speed_pu_m);
 
-//	// T·¨²âËÙ
+//	// Tæ³•æµ‹é€Ÿ
 //	if(EQep1Regs.QEPSTS.bit.UPEVNT==1)
 //	{
 //		if(EQep1Regs.QEPSTS.bit.COEF==0)
@@ -882,7 +732,7 @@ void OutLoop_Control(void)
 	if(PosEnable ==0)
 	{
 		PosRevCnt=0;
-//=================ËÙ¶È»· ¿¹±¥ºÍPI¿ØÖÆ===================================
+//=================é€Ÿåº¦çŽ¯ æŠ—é¥±å’ŒPIæŽ§åˆ¶===================================
 		if (OutLoopCnt>=SpeedRefScaler)
 		{
 			OutLoopCnt=0;
@@ -920,7 +770,7 @@ void OutLoop_Control(void)
 	else
 	{
 
-	//=================Î»ÖÃ»·¿ØÖÆ===================================
+	//=================ä½ç½®çŽ¯æŽ§åˆ¶===================================
 		if (OutLoopCnt>=PosRefScaler)
 		{
 			OutLoopCnt=0;
@@ -941,9 +791,9 @@ void OutLoop_Control(void)
 		ctrl_uk = pos_ctrl.Out;   //UMAX;
 
 //		float32 err = pos_ctrl.Ref - pos_ctrl.Fdb;
-//		float32 deadband = 1.0f / (float)MaxPulses * 2; // ÀýÈç 2 ¸öÂö³åµÄ·¶Î§
+//		float32 deadband = 1.0f / (float)MaxPulses * 2; // ä¾‹å¦‚ 2 ä¸ªè„‰å†²çš„èŒƒå›´
 //		if (fabs(err) < deadband) {
-//		    ctrl_uk = 0; // »òÕßÒ»¸öÐ¡µÄ±£³ÖµçÁ÷
+//		    ctrl_uk = 0; // æˆ–è€…ä¸€ä¸ªå°çš„ä¿æŒç”µæµ
 //		}
 
 		IQ_Given = _IQdiv(_IQ(ctrl_uk),_IQ(UMAX));
@@ -983,15 +833,15 @@ void performance_metrics_update(float y)
         y_max = y;
     }
 
-    // ¼ÆËã³¬µ÷Á¿£¨ÒÔÏà¶ÔÖµ±íÊ¾£¬¸ºÖµËã0£©
+    // è®¡ç®—è¶…è°ƒé‡ï¼ˆä»¥ç›¸å¯¹å€¼è¡¨ç¤ºï¼Œè´Ÿå€¼ç®—0ï¼‰
     float os = (y_max - ref) / ref;
     if(os < 0) os = 0;
     overshoot = os;
 
-//    // ÎÈÌ¬Îó²î£¨¾ø¶ÔÖµ£©
+//    // ç¨³æ€è¯¯å·®ï¼ˆç»å¯¹å€¼ï¼‰
 //    steady_state_error = fabsf(y - ref);
 
-    // ¼ÇÂ¼ÉÏÉýÊ±¼ä£¬Ê×´Î³¬¹ý0.9*ref
+    // è®°å½•ä¸Šå‡æ—¶é—´ï¼Œé¦–æ¬¡è¶…è¿‡0.9*ref
     if(!rise_flag && y >= 0.9f * ref && y>1e-6)
     {
         rise_time = sample_count * sample_period;
