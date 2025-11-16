@@ -225,13 +225,11 @@ _iq ID_Ki=_IQ(0.061);
 //:::::::::::::::::::::::::::位置环变量定义:::::::::::::::::::::::::::
 Uint16 PosEnable=1;//位置控制 使能  1 使能 ;  0 -> 调速
 int32 PosRevCnt = 0; // in Rev
-long Place_now = 0;   // 绝对脉冲计数
 float32 PosInRev = 0;
 float32 PosInit=0;
 float32 PosRef=1; //In Rev
 float32 PosErr=0;
 float32 pscale=2;
-float32 yk=0;
 int LoopCnt=0;
 Uint16 OutLoopScaler=20;
 int OutLoopCnt=0;
@@ -854,9 +852,7 @@ void OutLoop_Control(void)
 		}
 
 	}
-        Place_now = (long)RawTheta + ((long)PosRevCnt * (long)MaxPulses);
-        PosInRev = (float32)Place_now * (float32)PosRevScale;
-        yk = PosInRev;
+	PosInRev = PosRevCnt +  MechTheta;
 
 	speed_pu_m = (float)SpeedScale*(float)RawThetaTmp;
 	Speed = _IQ(speed_pu_m);
@@ -883,14 +879,11 @@ void OutLoop_Control(void)
 
 
 	OutLoopCnt++;
-        if(PosEnable ==0)
-        {
-                PosRevCnt=0;
-                Place_now=0;
-                yk=0;
-                PosInRev=0;
+	if(PosEnable ==0)
+	{
+		PosRevCnt=0;
 //=================速度环 抗饱和PI控制===================================
-                if (OutLoopCnt>=SpeedRefScaler)
+		if (OutLoopCnt>=SpeedRefScaler)
 		{
 			OutLoopCnt=0;
 //			if (SpdRef == 0)
@@ -928,24 +921,24 @@ void OutLoop_Control(void)
 	{
 
 	//=================位置环控制===================================
-                if (OutLoopCnt>=PosRefScaler)
-                {
-                        OutLoopCnt=0;
-                        if (pos_ctrl.Ref == 0)
-                                pos_ctrl.Ref = PosRef;
+		if (OutLoopCnt>=PosRefScaler)
+		{
+			OutLoopCnt=0;
+			if (pos_ctrl.Ref == 0)
+				pos_ctrl.Ref = PosRef;
 
-                        else
-                                pos_ctrl.Ref = 0;
+			else
+				pos_ctrl.Ref = 0;
 
 
-                        pscale=fabsf(2.0f*PosRef);
-                        if (pscale<0.5)
-                                pscale=1;
-                }
+			pscale=fabs(2.0*PosRef);
+			if (pscale<0.5)
+				pscale=1;
+		}
 
-                pos_ctrl.Fdb = yk;
-                pos_ctrl.calc(&pos_ctrl);
-                ctrl_uk = pos_ctrl.Out;   //UMAX;
+		pos_ctrl.Fdb = PosInRev;
+		pos_ctrl.calc(&pos_ctrl);
+		ctrl_uk = pos_ctrl.Out;   //UMAX;
 
 //		float32 err = pos_ctrl.Ref - pos_ctrl.Fdb;
 //		float32 deadband = 1.0f / (float)MaxPulses * 2; // 例如 2 个脉冲的范围
@@ -959,7 +952,7 @@ void OutLoop_Control(void)
 		else if(IQ_Given<MinOut)
 				IQ_Given=MinOut;
 
-                performance_metrics_update(yk);
+		performance_metrics_update(PosInRev);
 
 		DlogCh1=(int16)IQ_Given;  //_IQ15(ctrl_uk)
 		DlogCh2=(int16)_IQ15(pos_ctrl.Fdb/pscale);
