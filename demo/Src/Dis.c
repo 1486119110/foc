@@ -1,8 +1,6 @@
 #include "DSP2833x_Device.h"     // DSP2833x Headerfile Include File
 #include "DSP2833x_Examples.h"   // DSP2833x Examples Include File
 
-extern Uint16 PosEnable;//Î»ÖÃ¿ØÖÆ Ê¹ÄÜ  1 Ê¹ÄÜ ;  0 -> µ÷ËÙ
-extern float32 PosRef; //In Rev
 
 extern void DelayUS(Uint16 N_US);
 
@@ -13,6 +11,7 @@ Uint16 Show_time2=0;
 
 void iic_delay(void)//250ns
 {
+
 
      asm(" NOP");
       asm(" NOP");
@@ -111,302 +110,284 @@ void iic_delay(void)//250ns
        asm(" NOP");
       asm(" NOP");
 	 
+      
     
 
 }
  
  
-   
- 
-
-
 void Read_key(void)
 {
-	static Uint16 i=0,j=0,k=0,n=0,anjiancnt1=0,anjiancnt2=0,anjiancnt3=0,anjiancnt4=0,anjiancnt5=0,anjiancnt6=0;
+    static Uint16 i = 0, j = 0, k = 0, n = 0, anjiancnt1 = 0, anjiancnt2 = 0, anjiancnt3 = 0, anjiancnt4 = 0, anjiancnt5 = 0, anjiancnt6 = 0;
 
-	i++;
-	if(i==800)
-	{
-		i=0;
-		if(Key_Flag==0)
-		{
-
-			if((k>>6)==1)//ÓÐ¼ü°´ÏÂ
-			{
-				j=1;
-
-			}
-			else
-			{
-				if(j==1)
-				{
-					Key_Flag=1;//
-					ch454_key=k;
-					j=0;
-				}
-			}
-		}
-
-    if(Key_Flag==0)
+    i++;
+    if(i == 800)
     {
+        i = 0;
 
-    	if(GpioDataRegs.GPCDAT.bit.GPIO79==0)//anjian1
-    	{
-    		anjiancnt1++;
-    		if(anjiancnt1>1)
-    		{
-    			Key_Flag=1;
-    			ch454_key=0;
+        // Ö´Ð¶Â²Ê¶Ö±Key_FlagÎ»
+        if(Key_Flag == 0)
+        {
+            if((k >> 6) == 1) // Ð¼
+            {
+                j = 1;          // ÇµÇ°Ð°
+            }
+            else
+            {
+                if(j == 1)     // Ò»Î¼âµ½Â¹Ç°É¿Ð¶ÎªÐ§Ò»Î¡
+                {
+                    Key_Flag = 1;
+                    ch454_key = k;
+                    j = 0;
+                }
+            }
+        }
 
-    		}
+        if(Key_Flag == 0)
+        {
+            if(GpioDataRegs.GPCDAT.bit.GPIO79 == 0) // anjian1
+            {
+                anjiancnt1++;
+                if(anjiancnt1 > 1)
+                {
+                    Key_Flag = 1;
+                    ch454_key = 0;      //Ò»
+                }
+            }
+            else
+            {
+                anjiancnt1 = 0;
+            }
 
-    	}
-    	else
-    	{anjiancnt1=0;}
+            if(GpioDataRegs.GPBDAT.bit.GPIO38 == 0) // anjian2
+            {
+                anjiancnt2++;
+                if(anjiancnt2 > 1)
+                {
+                    Key_Flag = 1;
+                    ch454_key = 1;
+                }
+            }
+            else
+            {
+                anjiancnt2 = 0;
+            }
 
-    	if(GpioDataRegs.GPBDAT.bit.GPIO38==0)//anjian2
-    	{
-    		anjiancnt2++;
-    		if(anjiancnt2>1)
-    		{
-    			Key_Flag=1;
-    			ch454_key=1;
-    		}
+            if(GpioDataRegs.GPBDAT.bit.GPIO35 == 0) // anjian3
+            {
+                anjiancnt3++;
+                if(anjiancnt3 > 1)
+                {
+                    Key_Flag = 1;
+                    n++;
+                    if(n % 2 == 0) // zheng
+                    {
+                        ch454_key = 2;
+                    }
+                    else // fan
+                    {
+                        ch454_key = 3;
+                    }
+                }
+            }
+            else
+            {
+                anjiancnt3 = 0;
+            }
 
-    	}
-    	else
-    	{anjiancnt2=0;}
+            if(GpioDataRegs.GPBDAT.bit.GPIO37 == 0) // anjian4
+            {
+                anjiancnt4++;
+                if(anjiancnt4 > 1)
+                {
+                    Key_Flag = 1;
+                    ch454_key = 4;
+                }
+            }
+            else
+            {
+                anjiancnt4 = 0;
+            }
 
-    	if(GpioDataRegs.GPBDAT.bit.GPIO35==0)//anjian3
-    	{
-    		anjiancnt3++;
-    		if(anjiancnt3>1)
-    		{
-    			Key_Flag=1;
-    			n++;
-    			if(n%2==0)//zheng Õý·´°´¼üÓÃÓÚÇÐ»»¿ØÖÆÄ£Ê½£ºÎ»ÖÃ /×ªËÙ
-    				{ch454_key=2;}
-    			else//fan
-    			    {ch454_key=3;}
-    		}
+            if(GpioDataRegs.GPBDAT.bit.GPIO40 == 0) // anjian5
+            {
+                anjiancnt5++;
+                if(anjiancnt5 > 1)
+                {
+                    Key_Flag = 1;
+                    ch454_key = 5;
+                }
+            }
+            else
+            {
+                anjiancnt5 = 0;
+            }
 
-    	}
-    	else
-    	{anjiancnt3=0;}
-
-    	if(GpioDataRegs.GPBDAT.bit.GPIO37==0)//anjian4
-    	{
-    		anjiancnt4++;
-    		if(anjiancnt4>1)
-    		{
-    			Key_Flag=1;
-    			ch454_key=4;
-    		}
-    	}
-    	else
-    	{
-    		anjiancnt4=0;
-    	}
-
-    	if(GpioDataRegs.GPBDAT.bit.GPIO40==0)//anjian5
-    	{
-    		anjiancnt5++;
-    		if(anjiancnt5>1)
-    		{
-    			Key_Flag=1;
-    			ch454_key=5;
-    		}
-
-    	}
-    	else
-    	{anjiancnt5=0;}
-
-
-    	if(GpioDataRegs.GPBDAT.bit.GPIO41==0)//anjian6
-    	{
-    		anjiancnt6++;
-    		if(anjiancnt6>1)
-    		{
-    			Key_Flag=1;
-    			ch454_key=6;
-    		}
-
-    	}
-    	else
-    	{anjiancnt6=0;}
-        
-
+            if(GpioDataRegs.GPBDAT.bit.GPIO41 == 0) // anjian6
+            {
+                anjiancnt6++;
+                if(anjiancnt6 > 1)
+                {
+                    Key_Flag = 1;
+                    ch454_key = 6;
+                }
+            }
+            else
+            {
+                anjiancnt6 = 0;
+            }
+        }
     }
 }
 
-}
  
-
-
-
-
 void deal_key_lcd(void)
 {
-	if(Key_Flag==1)
-	{
-		Key_Flag=0;
+    if (Key_Flag == 1)
+    {
+        Key_Flag = 0;
 
-		switch(ch454_key)
-		{
-		case 0:	 //++
+        switch (ch454_key)
+        {
+            case 0: // ++
+                if (ZhengFan == 1)          //Ð¶×ª
+                {
+                    if (speed_give < 100)
+                    {
+                        speed_give = 1 + speed_give;
+                        SpeedRef = speed_give * 1.0 / 100;
+                    }
+                }
+                else
+                {
+                    if (speed_give < 100)
+                    {
+                        speed_give = 1 + speed_give;
+                        SpeedRef = speed_give * 1.0 / -100;
+                    }
+                }
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
 
-			if(PosEnable==1)    // ZhengFan=1
-			{
-				PosRef=PosRef+0.5;
-				if(PosRef>4.0)
-					PosRef=4.0;
-			}
-			else
-			{
-				SpeedRef=SpeedRef+0.05;
-				if(SpeedRef>1.0)
-					SpeedRef=1.0;
-			}
+            case 1: // --
+                if (ZhengFan == 1)
+                {
+                    if (speed_give > 0)
+                    {
+                        speed_give = speed_give - 1;
+                        SpeedRef = speed_give * 1.0 / 100;
+                    }
+                }
+                else
+                {
+                    if (speed_give > 0)
+                    {
+                        speed_give = speed_give - 1;
+                        SpeedRef = speed_give * 1.0 / -100;
+                    }
+                }
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
 
+            case 4: // 
+                if (U_dc_dis > 15) // âµ½Ð¸
+                {
+                    Run_PMSM = 1;
+                    eva_open();
+                }
+                else
+                {
+                    DC_ON_1;
+                    DC_ON_OPEN = 1; // Ã»
+                    Run_PMSM = 2;
+                }
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
 
-			Key_Flag=0;
-			ch454_key=0xef;
+            case 3: // ×ª
+                if (Run_PMSM == 2) // Í£×´Ì¬Ð»
+                {
+                    DC_ON_1;
+                    ZhengFan = 0;
+                    SpeedRef = speed_give * 1.0 / -100;
+                }
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
 
-			break;
+            case 5: // Í£Ö¹
+                DC_ON_1;
+                DC_ON_flag = 1;
+                Place_now = 0;
+                DC_ON_OPEN = 0;
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
 
-		case 1://--
+            case 2: // ×ª
+                if (Run_PMSM == 2) // Í£×´Ì¬Ð»
+                {
+                    DC_ON_1;
+                    ZhengFan = 1;
+                    SpeedRef = speed_give * 1.0 / 100;
+                }
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
 
-			if(PosEnable==1)    // ZhengFan=1
-			{
-				PosRef=PosRef-0.5;
-				if(PosRef<-4.0)
-					PosRef=-4.0;
-			}
-			else
-			{
-				SpeedRef=SpeedRef-0.05;
-				if(SpeedRef<-1.0)
-					SpeedRef=-1.0;
-			}
+            case 6: // POWER ON
+                if (Run_PMSM == 2)
+                {
 
+                    //Ö¸×°ÚµÚ²â²¿Ú¼×ªÓ´Å¼ä»¯Ä»
+                    HallAngle = 0;
 
-			Key_Flag=0;
-			ch454_key=0xef;
+                    // U/V/W ÅºÅµÄµÇ°Æ½Ï³Ò» 3-bit 
+                    if (GpioDataRegs.GPCDAT.bit.GPIO78) // W
+                    {
+                        HallAngle += 1;
+                    }
+                    if (GpioDataRegs.GPCDAT.bit.GPIO77) // V
+                    {
+                        HallAngle += 2;
+                    }
+                    if (GpioDataRegs.GPCDAT.bit.GPIO76) // U
+                    {
+                        HallAngle += 4;
+                    }
 
-			break;
+                    //Ð¶Ï»Ç·ì³£
+                    if (HallAngle == 7)
+                    {
+                        Hall_Fault = 1;
+                    }
+                    else
+                    {
+                        DC_ON_0;
+                        DC_ON_flag = 0;
+                    }
+                }
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
 
-		case 4:	 //ÔËÐÐ
-
-			if(U_dc_dis>15)//¼ì²âµ½ÓÐ¸ø¶¯Á¦µç
-			{
-				Run_PMSM=1;
-				eva_open();
-
-			}
-			else
-			{
-				DC_ON_1;
-				DC_ON_OPEN=1;//·´À¡Ö÷µçÃ»ÓÐ
-				Run_PMSM=2;
-
-			}
-			Key_Flag=0;
-			ch454_key=0xef;
-			break;
-
-		case 2://Õý×ª-> Î»ÖÃ¿ØÖÆ
-//			if(Run_PMSM==2)//Í£»ú×´Ì¬ÏÂÇÐ»»
-//			{
-//				DC_ON_1;
-				//ZhengFan=1;
-				PosEnable=1;
-				PosRef=1.0;
-//			}
-
-			Key_Flag=0;
-			ch454_key=0xef;
-			break;
-
-		case 3://·´×ª->ËÙ¶È¿ØÖÆ
-//			if(Run_PMSM==2)//Í£»ú×´Ì¬ÏÂÇÐ»»
-//			{
-//				DC_ON_1;
-		//		ZhengFan=0;
-				PosEnable=0;
-				SpeedRef=0.05;
-//			}
-
-			Key_Flag=0;
-			ch454_key=0xef;
-
-			break;
-
-		case 5: //Í£Ö¹
-			DC_ON_1;
-			DC_ON_flag=1;
-			DC_ON_OPEN=0;
-			Key_Flag=0;
-			ch454_key=0xef;
-			break;
-
-
-		case 6: //PWOER ON
-			if(Run_PMSM==2)
-			{
-				HallAngle=0;
-				if(GpioDataRegs.GPCDAT.bit.GPIO78) //W
-				{
-					HallAngle+=1;
-				}
-				if(GpioDataRegs.GPCDAT.bit.GPIO77)//V
-				{
-					HallAngle+=2;
-				}
-
-				if(GpioDataRegs.GPCDAT.bit.GPIO76)//U
-				{
-					HallAngle+=4;
-
-				}
-				if(HallAngle==7)
-				{
-					Hall_Fault=1;
-				}
-				else
-				{
-					DC_ON_0;
-					DC_ON_flag=0;
-
-
-				}
-			}
-
-			Key_Flag=0;
-			ch454_key=0xef;
-			break;
-
-        
-        default:
-        	Key_Flag=0;
-        	ch454_key=0xef;
-        	break;
-
-
-         
-		}
-
-
-	}
-
-
-
+            default:
+                Key_Flag = 0;
+                ch454_key = 0xef;
+                break;
+        }
+    }
 }
+
+
 
 
 void deal_key(void)
 {
     deal_key_lcd();
-
 }
 
 

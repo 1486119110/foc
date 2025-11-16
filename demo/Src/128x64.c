@@ -1,23 +1,18 @@
 #include "DSP2833x_Device.h"     // DSP2833x Headerfile Include File
 #include "DSP2833x_Examples.h"   // DSP2833x Examples Include File
-#include<stdio.h>
-
-extern float32 SpeedRef;
-extern float32 PosRef;
-extern Uint16 PosEnable;//Î»ÖÃ¿ØÖÆ Ê¹ÄÜ  1 Ê¹ÄÜ ;  0 -> µ÷ËÙ
 
 
 Uint16 addr_tab[]={
-0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,//µÚÒ»ĞĞºº×ÖÎ»ÖÃ
-0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,//µÚ¶şĞĞºº×ÖÎ»ÖÃ
-0x88,0x89,0x8a,0x8b,0x8c,0x8d,0x8e,0x8f,//µÚÈıĞĞºº×ÖÎ»ÖÃ
-0x98,0x99,0x9a,0x9b,0x9c,0x9d,0x9e,0x9f,//µÚËÄĞĞºº×ÖÎ»ÖÃ
-}; 
-Uint16 lcd_dis_flag=0;
+char Lcd_Dat[6]={0};
+    EALLOW;
+    GpioCtrlRegs.GPBMUX1.bit.GPIO45=0;//sdl_lcd
+     GpioCtrlRegs.GPBDIR.bit.GPIO45=1;
+     
+     GpioCtrlRegs.GPBMUX1.bit.GPIO44=0;//scl_lcd
+     GpioCtrlRegs.GPBDIR.bit.GPIO44=1;
+     EDIS;
 
-char Lcd_Dat[8]={0};
-
-void DelayUS2(Uint16 N_US) //1USÑÓÊ± 
+     SCL_LCD_0;
 {
     Uint16 i=0;  
 
@@ -82,206 +77,164 @@ void Lcd_WriteCmd(Uint16 dat)
      
      //CheckBusy();
      DelayUS2(10000);
-     LCD_SendByte(0xf8);  //¿ØÖÆÖ¸Áî            //11111,RW(0),RS(0),0
-     LCD_SendByte(0xf0&dat);        //¸ßËÄÎ»
-     LCD_SendByte(0xf0&(dat<<4));   //µÍËÄÎ»(ÏÈÖ´ĞĞ<<)
-     
-}
-
-void Lcd_WriteData(Uint16 dat)
-{
-    
-     //CheckBusy();
-     DelayUS2(15000);
-     LCD_SendByte(0xfa);           //11111,RW(0),RS(1),0
-     LCD_SendByte(0xf0&dat);        //¸ßËÄÎ»
-     LCD_SendByte(0xf0&(dat<<4));   //µÍËÄÎ»(ÏÈÖ´ĞĞ<<)
-     
-}
-
-void hanzi_Disp(Uint16 x,Uint16 y,char *s)
-{
-	Lcd_WriteCmd(addr_tab[8*x+y]);  //Ğ´µØÖ·
-	while(*s>0)
-	{
-		Lcd_WriteData(*s);    //Ğ´Êı¾İ
-		DelayUS2(1);
-		s++;
-	}
-}
-
-void Init_lcd(void)
-{
-    Init_lcd_Gpio();
-
+     LCD_SendByte(0xfa);              //11111,RW(0),RS(1),0
+void hanzi_Disp(Uint16 x,Uint16 y,char  *s)
+ Lcd_WriteCmd(addr_tab[8*x+y]);  //Ğ´Ö·
+ while(*s>0)
+    {
+  Lcd_WriteData(*s);    //Ğ´
+  DelayUS2(1);
+  s++;   
+    } 
+    Lcd_WriteCmd(0x30);          //Ñ¡Ö¸î¼¯
+  hanzi_Disp(0,0,"Í¬Êµ");
   
-    DelayUS2(50000);
-    Lcd_WriteCmd(0x30);        //Ñ¡Ôñ»ù±¾Ö¸Áî¼¯
-    DelayUS2(10000);
-    Lcd_WriteCmd(0x30);          //Ñ¡Ôñ8bitÊı¾İÁ÷
-    DelayUS2(10000);
-    Lcd_WriteCmd(0x0c);          //¿ªÏÔÊ¾(ÎŞÓÎ±ê¡¢²»·´°×)
-    DelayUS2(10000);
-    Lcd_WriteCmd(0x01);          //Çå³ıÏÔÊ¾£¬²¢ÇÒÉè¶¨µØÖ·Ö¸ÕëÎª00H
-    DelayUS2(10000);
+   
+  hanzi_Disp(1,0,"UDC:000 RPM:0000");
+  
+   
+  hanzi_Disp(2,0,"IA:00.0 IB:00.0");
+   
+   
+  hanzi_Disp(3,0,"+000  Í£Ö¹  ");
+	
+    i= U_dc_dis/100;//
+    Lcd_Dat[0]=0x30+i;
 
-    hanzi_Disp(0,0,"ÓÀ´ÅÍ¬²½µç»ú¿ØÖÆ");
-
-
-    hanzi_Disp(1,0,"UDC: 00 RPM:0000");
-
-
-    hanzi_Disp(2,0,"IA: 0.0 IB: 0.0");
-
-
-    hanzi_Disp(3,0,"+000  Í£Ö¹  Õı³£");
-
- 
-
-}
-
-
-void Lcd_Dis_Udc(void)//ÏÔÊ¾µçÑ¹
-{
+    
+    Lcd_Dat[0]=0x30+i;//Ç§
+            
+    Lcd_Dat[3]=0x30+i; 
     Uint16 i=0;
-
-    i= U_dc_dis/100; //°Ù
-	if (i>0)
-	    Lcd_Dat[0]=0x30+i;
-	else
-		Lcd_Dat[0]=' ';
-
-
-    i= (U_dc_dis/10)%10;//Ê®
-    Lcd_Dat[1]=0x30+i;
-
-    i= U_dc_dis%10;//¸ö
-    Lcd_Dat[2]=0x30+i;
-
-//	sprintf(Lcd_Dat,"%3d",U_dc_dis);
-
-    Lcd_Dat[3]=' ';
-    Lcd_Dat[4]='\0';
-
-    hanzi_Disp(1,2,Lcd_Dat);//ÏÔÊ¾µçÑ¹
-
-}
-
-void Lcd_Dis_RPM(void)//ÏÔÊ¾×ªËÙ
-{
-    Uint16 i=0;
-    Uint16 j=0;
-
-
-    j=speed_dis;
-    i= j/1000;
- 	if (i>0)
-	    Lcd_Dat[0]=0x30+i;
-	else
-		Lcd_Dat[0]=' ';
-
-    i= (j/100)%10; //°Ù
-    Lcd_Dat[1]=0x30+i;
-
-    i= (j/10)%10;//Ê®
-    Lcd_Dat[2]=0x30+i;
-
-    i= (j)%10;//¸ö
-    Lcd_Dat[3]=0x30+i;
-
-//    sprintf(Lcd_Dat,"%4d",speed_dis);
-
-    Lcd_Dat[4]='\0';
-
-    hanzi_Disp(1,6,Lcd_Dat);//ÏÔÊ¾×ªËÙ
-
- 
-
-}
-
-void Lcd_Dis_DL(void)//ÏÔÊ¾µçÁ÷
-{
-//	float ii;
-
-	Uint16 i=0;
-
-	Lcd_Dat[0]=':';
-	i= I_A/100;//°Ù
-	if (i>0)
-		Lcd_Dat[1]=0x30+i;
-	else
-		Lcd_Dat[1]=' ';
-
-	i= (I_A/10)%10; //Ê®
-	Lcd_Dat[2]=0x30+i;
-
-	Lcd_Dat[3]='.';
-
-	i= I_A%10; //¸ö
-	Lcd_Dat[4]=0x30+i;
-
-//  ii=(float)I_A/10.0;
-//	sprintf(Lcd_Dat,":%4.1f",ii);
-
-	Lcd_Dat[5]='\0';
-
-    hanzi_Disp(2,1,Lcd_Dat);//ÏÔÊ¾aÏà
-
 
     Lcd_Dat[0]=':';
-    i= I_B/100; //°Ù
-	if (i>0)
-		Lcd_Dat[1]=0x30+i;
-	else
-		Lcd_Dat[1]=' ';
+    i= I_A/100;//
+    Lcd_Dat[1]=0x30+i;
 
-    i= (I_B/10)%10;//Ê®
+    i= (I_A/10)%10;//Ê®
     Lcd_Dat[2]=0x30+i;
 
     Lcd_Dat[3]='.';
 
-    i= I_B%10;//¸ö
+    i= I_A%10;//
     Lcd_Dat[4]=0x30+i;
-
     
-//    ii=(float)I_B/10.0;
-//	sprintf(Lcd_Dat,":%4.1f",ii);
-
     Lcd_Dat[5]='\0';
 
-    hanzi_Disp(2,5,Lcd_Dat);//ÏÔÊ¾bÏà
 
-   
-
-}
-
+     Lcd_Dat[0]=':';
+    i= I_B/100;//
+    Lcd_Dat[1]=0x30+i;
 
 
-void Lcd_Dis_sheding(void)//ÏÔÊ¾Éè¶¨×ªËÙ
+    
+
+    if(ZhengFan==1)
+         Lcd_Dat[0]='+';//×ª
+
+         Lcd_Dat[0]='-';//×ª
+        
+    i= speed_give/100;//
+    Lcd_Dat[1]=0x30+i;
+
+    i= (speed_give/10)%10;//Ê®
+    Lcd_Dat[2]=0x30+i;
+    i= speed_give%10;//
+    Lcd_Dat[3]=0x30+i;
+    Lcd_Dat[4]='\0';
+    hanzi_Disp(3,0,Lcd_Dat);//Ê¾è¶¨×ª
+
+     if(Run_PMSM==1)
+    {
+        hanzi_Disp(3,3,"");
+
+    }
+     else
+     {
+          hanzi_Disp(3,3,"Í£Ö¹");
+
+     }
+
+
+       if(IPM_Fault==1)
+         hanzi_Disp(3,6,"");
+
+    else if(DC_ON_OPEN==1)
+         hanzi_Disp(3,6,"");
+
+     else if(DC_ON_OPEN==2)
+         hanzi_Disp(3,6,"");
+
+     else if(DC_ON_OPEN==3)
+         hanzi_Disp(3,6,"Ñ¹");
+
+       else if(DC_ON_OPEN==4)
+    {
+         hanzi_Disp(3,6,"");
+
+    }
+     else if(O_Current==1)
+     {
+        hanzi_Disp(3,6,"");
+         
+     }
+     else if(O_Current==2)
+     {
+        hanzi_Disp(3,6,"");
+         
+     }
+     else if(Hall_Fault==1)
+     {
+        hanzi_Disp(3,6,"");
+
+     }
+     else if(ShangDian_Err==1)
+     {
+
+        hanzi_Disp(3,6,"");//ÏµÊ±
+
+
+     }
+     else
+     {
+        hanzi_Disp(3,6,"");
+
+     }
+       
+void LCD_DIS(void)
 {
-    Uint16 i=0;
+    static Uint16 i = 0;
 
-//    if(ZhengFan==1)
-//    {
-//         Lcd_Dat[0]='+';//Õı×ª
-//    }
-//    else
-//    {
-//         Lcd_Dat[0]='-';//·´×ª
-//    }
-//
-//    i= speed_give/100;//°Ù
-//    Lcd_Dat[1]=0x30+i;
-//
-//    i= (speed_give/10)%10;//Ê®
-//    Lcd_Dat[2]=0x30+i;
-//
-//    i= speed_give%10;//¸ö
-//    Lcd_Dat[3]=0x30+i;
-
-	if (PosEnable==0)
+    if (lcd_dis_flag == 1)
+    {
+        if (i == 0)
+        {
+            Lcd_Dis_Udc();
+            i++;
+            lcd_dis_flag = 0;
+        }
+        else if (i == 1)
+        {
+            Lcd_Dis_RPM();
+            i++;
+            lcd_dis_flag = 0;
+        }
+        else if (i == 2)
+        {
+            Lcd_Dis_DL();
+            i++;
+            lcd_dis_flag = 0;
+        }
+        else if (i == 3)
+        {
+            Lcd_Dis_sheding();
+            i = 0;
+            lcd_dis_flag = 0;
+        }
+    }
+}
 	{
-//		sprintf(Lcd_Dat,"%5.2f",SpeedRef);     // Õâ¸öÓï¾ä ÔËĞĞ»á³ö´í
+//		sprintf(Lcd_Dat,"%5.2f",SpeedRef);     // è¿™ä¸ªè¯­å¥ è¿è¡Œä¼šå‡ºé”™
 		if (SpeedRef>0)
 			Lcd_Dat[0]='+';
 		else
@@ -297,7 +250,7 @@ void Lcd_Dis_sheding(void)//ÏÔÊ¾Éè¶¨×ªËÙ
 	}
 	else
 	{
-//		sprintf(Lcd_Dat,"P%4.1f",PosRef);   // Õâ¸öÓï¾ä ÔËĞĞ»á³ö´í
+//		sprintf(Lcd_Dat,"P%4.1f",PosRef);   // è¿™ä¸ªè¯­å¥ è¿è¡Œä¼šå‡ºé”™
 		Lcd_Dat[0]='P';
 		if (PosRef>0)
 			Lcd_Dat[1]=' ';
@@ -312,58 +265,58 @@ void Lcd_Dis_sheding(void)//ÏÔÊ¾Éè¶¨×ªËÙ
 
 
     Lcd_Dat[5]='\0';
-    hanzi_Disp(3,0,Lcd_Dat);//ÏÔÊ¾Éè¶¨×ªËÙ»òÎ»ÖÃ
+    hanzi_Disp(3,0,Lcd_Dat);//æ˜¾ç¤ºè®¾å®šè½¬é€Ÿæˆ–ä½ç½®
 
 
     if(Run_PMSM==1)
     {
-    	hanzi_Disp(3,3,"ÔËĞĞ");
+    	hanzi_Disp(3,3,"è¿è¡Œ");
     }
     else
     {
-    	hanzi_Disp(3,3,"Í£Ö¹");
+    	hanzi_Disp(3,3,"åœæ­¢");
     }
 
 
     if(IPM_Fault==1)
     {
-    	hanzi_Disp(3,6,"¹ÊÕÏ");
+    	hanzi_Disp(3,6,"æ•…éšœ");
     }
     else if(DC_ON_OPEN==1)
     {
-    	hanzi_Disp(3,6,"Ö÷µç");
+    	hanzi_Disp(3,6,"ä¸»ç”µ");
     }
     else if(DC_ON_OPEN==2)
     {
-    	hanzi_Disp(3,6,"µôµç");
+    	hanzi_Disp(3,6,"æ‰ç”µ");
     }
     else if(DC_ON_OPEN==3)
     {
-    	hanzi_Disp(3,6,"¹ıÑ¹");
+    	hanzi_Disp(3,6,"è¿‡å‹");
     }
     else if(DC_ON_OPEN==4)
     {
-    	hanzi_Disp(3,6,"·ÂÕæ");
+    	hanzi_Disp(3,6,"ä»¿çœŸ");
     }
     else if(O_Current==1)
     {
-    	hanzi_Disp(3,6,"¹ıÁ÷");
+    	hanzi_Disp(3,6,"è¿‡æµ");
     }
     else if(O_Current==2)
     {
-    	hanzi_Disp(3,6,"ÏŞÁ÷");
+    	hanzi_Disp(3,6,"é™æµ");
     }
     else if(Hall_Fault==1)
     {
-    	hanzi_Disp(3,6,"»ô¶û");
+    	hanzi_Disp(3,6,"éœå°”");
     }
     else if(ShangDian_Err==1)
     {
-    	hanzi_Disp(3,6,"±£»¤");//ÉÏµçÊ±Ğò´íÎó
+    	hanzi_Disp(3,6,"ä¿æŠ¤");//ä¸Šç”µæ—¶åºé”™è¯¯
     }
     else
     {
-    	hanzi_Disp(3,6,"Õı³£");
+    	hanzi_Disp(3,6,"æ­£å¸¸");
     }
 
 
