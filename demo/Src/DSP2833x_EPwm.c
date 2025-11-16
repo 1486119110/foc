@@ -13,7 +13,7 @@
 
 #include "DSP2833x_Device.h"     // DSP2833x Headerfile Include File
 #include "DSP2833x_Examples.h"   // DSP2833x Examples Include File
-#define deadtime 320
+#define deadtime 200
 //_iq LineEncoder=32768000;
 
 
@@ -43,20 +43,20 @@ void Init_Pwm_DAC()
 
     // EPWM Module 4 config
 
-EPwm4Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=TBPRD*Ttbclk,100±íÊ¾20k
+EPwm4Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=TBPRD*Ttbclk,100è¡¨ç¤º20k
 EPwm4Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
 EPwm4Regs.TBCTR=0;
-EPwm4Regs.TBCTL.bit.FREE_SOFT=0;//×ÔÓÉÔËĞĞ
-EPwm4Regs.TBCTL.bit.PHSDIR=1;//µİÔö¼ÆÊı
+EPwm4Regs.TBCTL.bit.FREE_SOFT=0;//è‡ªç”±è¿è¡Œ
+EPwm4Regs.TBCTL.bit.PHSDIR=1;//é€’å¢è®¡æ•°
 EPwm4Regs.TBCTL.bit.CLKDIV=0;
 EPwm4Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm4Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm4Regs.TBCTL.bit.PRDLD=0;//Ó°×ÓÄ£Ê½
+EPwm4Regs.TBCTL.bit.PRDLD=0;//å½±å­æ¨¡å¼
 EPwm4Regs.TBCTL.bit.PHSEN=0;//
-EPwm4Regs.TBCTL.bit.CTRMODE=0;//Ôö¼ÆÊı
+EPwm4Regs.TBCTL.bit.CTRMODE=0;//å¢è®¡æ•°
 
 
-EPwm4Regs.CMPCTL.all=0x0000;//cmpbÓ°×Ó×°ÔØ£¬cmpaÓ°×Ó×°ÔØ£¬¾ùÊÇ¹ı0×°ÔØ
+EPwm4Regs.CMPCTL.all=0x0000;//cmpbå½±å­è£…è½½ï¼Œcmpaå½±å­è£…è½½ï¼Œå‡æ˜¯è¿‡0è£…è½½
 
 EPwm4Regs.AQCTLA.bit.PRD =  AQ_SET;
 EPwm4Regs.AQCTLA.bit.CAU = AQ_CLEAR;
@@ -72,11 +72,11 @@ EPwm4Regs.CMPB=2000;//dac2
 
 EDIS;
 
-//pwm dac ËµÃ÷£¬ pwm Õ¼¿Õ±È 3750 ¶ÔÓ¦µÄÊÇ 5v  ÆäËüÖµµÄÊä³ö ¾Í¶®ÁË°É£¬Ö»ÄÜÊä³öÕıµçÑ¹µÄÅ¶¡£
+//pwm dac è¯´æ˜ï¼Œ pwm å ç©ºæ¯” 3750 å¯¹åº”çš„æ˜¯ 5v  å…¶å®ƒå€¼çš„è¾“å‡º å°±æ‡‚äº†å§ï¼Œåªèƒ½è¾“å‡ºæ­£ç”µå‹çš„å“¦ã€‚
 
 }
 
-void DAC1_out(_iq data)//dataÊÇ±êÃ´Öµ
+void DAC1_out(_iq data)//dataæ˜¯æ ‡ä¹ˆå€¼
 {
     Uint16 temp=0;
     if(data<0)
@@ -94,7 +94,7 @@ void DAC1_out(_iq data)//dataÊÇ±êÃ´Öµ
 
 }
 
-void DAC2_out(_iq data)//dataÊÇ±êÃ´Öµ
+void DAC2_out(_iq data)//dataæ˜¯æ ‡ä¹ˆå€¼
 {
     Uint16 temp=0;
     if(data<0)
@@ -134,23 +134,23 @@ void InitEPwm_1_2_3(void)
     EALLOW;
     
 EPwm1Regs.TBCTR=0;
-EPwm1Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100±íÊ¾10k
+EPwm1Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100è¡¨ç¤º10k
 T1Period=EPwm1Regs.TBPRD;
 EPwm1Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
-//EPwm1Regs.TBCTL.all=0xa092;//×ÔÓÉÔËĞĞ£¬´Ó0¿ªÊ¼¼ÆÊı,clkdiv=1,hspclkdiv=2,tbclk=75m,ctr=0,tbprdÓ°×Ó×°ÔØ
+//EPwm1Regs.TBCTL.all=0xa092;//è‡ªç”±è¿è¡Œï¼Œä»0å¼€å§‹è®¡æ•°,clkdiv=1,hspclkdiv=2,tbclk=75m,ctr=0,tbprdå½±å­è£…è½½
 
-EPwm1Regs.TBCTL.bit.FREE_SOFT=0;//×ÔÓÉÔËĞĞ
-EPwm1Regs.TBCTL.bit.PHSDIR=1;//µİÔö¼ÆÊı
+EPwm1Regs.TBCTL.bit.FREE_SOFT=0;//è‡ªç”±è¿è¡Œ
+EPwm1Regs.TBCTL.bit.PHSDIR=1;//é€’å¢è®¡æ•°
 EPwm1Regs.TBCTL.bit.CLKDIV=0;
 EPwm1Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm1Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm1Regs.TBCTL.bit.PRDLD=0;//Ó°×ÓÄ£Ê½
+EPwm1Regs.TBCTL.bit.PRDLD=0;//å½±å­æ¨¡å¼
 EPwm1Regs.TBCTL.bit.PHSEN=0;//master
-EPwm1Regs.TBCTL.bit.CTRMODE=2;//Ôö¼õ
+EPwm1Regs.TBCTL.bit.CTRMODE=2;//å¢å‡
 
-EPwm1Regs.CMPCTL.all=0x0000;//cmpbÓ°×Ó×°ÔØ£¬cmpaÓ°×Ó×°ÔØ£¬¾ùÊÇ¹ı0×°ÔØ
+EPwm1Regs.CMPCTL.all=0x0000;//cmpbå½±å­è£…è½½ï¼Œcmpaå½±å­è£…è½½ï¼Œå‡æ˜¯è¿‡0è£…è½½
 
-EPwm1Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmµÍµçÆ½ÓĞĞ§ 1a
+EPwm1Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmä½ç”µå¹³æœ‰æ•ˆ 1a
 EPwm1Regs.AQCTLA.bit.CAD=AQ_SET;
 
 EPwm1Regs.DBCTL.bit.IN_MODE=0;//epwma source
@@ -159,28 +159,28 @@ EPwm1Regs.DBCTL.bit.POLSEL = DB_ACTV_LOC; // Active Hi complementary
 EPwm1Regs.DBFED= deadtime; // FED = 200 TBCLKs
 EPwm1Regs.DBRED= deadtime; // RED = 200 TBCLKs
 
-EPwm1Regs.ETSEL.bit.INTSEL=1;//ÏÂÒçÖĞ¶Ï
-EPwm1Regs.ETSEL.bit.INTEN=1;//Ê¹ÄÜEPWM1_INTÖĞ¶Ï
+EPwm1Regs.ETSEL.bit.INTSEL=1;//ä¸‹æº¢ä¸­æ–­
+EPwm1Regs.ETSEL.bit.INTEN=1;//ä½¿èƒ½EPWM1_INTä¸­æ–­
 EPwm1Regs.ETPS.bit.INTPRD = ET_1ST;           // Generate INT on 1st event
-EPwm1Regs.ETCLR.bit.INT=1;//Çå³ıÖĞ¶Ï±êÖ¾Î»
+EPwm1Regs.ETCLR.bit.INT=1;//æ¸…é™¤ä¸­æ–­æ ‡å¿—ä½
 
 // EPWM Module 2 config
 
-EPwm2Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100±íÊ¾10k
+EPwm2Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100è¡¨ç¤º10k
 EPwm2Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
 EPwm2Regs.TBCTR=0;
-EPwm2Regs.TBCTL.bit.FREE_SOFT=0;//×ÔÓÉÔËĞĞ
-EPwm2Regs.TBCTL.bit.PHSDIR=1;//µİÔö¼ÆÊı
+EPwm2Regs.TBCTL.bit.FREE_SOFT=0;//è‡ªç”±è¿è¡Œ
+EPwm2Regs.TBCTL.bit.PHSDIR=1;//é€’å¢è®¡æ•°
 EPwm2Regs.TBCTL.bit.CLKDIV=0;
 EPwm2Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm2Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm2Regs.TBCTL.bit.PRDLD=0;//Ó°×ÓÄ£Ê½
+EPwm2Regs.TBCTL.bit.PRDLD=0;//å½±å­æ¨¡å¼
 EPwm2Regs.TBCTL.bit.PHSEN=0;//
-EPwm2Regs.TBCTL.bit.CTRMODE=2;//Ôö¼õ
+EPwm2Regs.TBCTL.bit.CTRMODE=2;//å¢å‡
 
-EPwm2Regs.CMPCTL.all=0x0000;//cmpbÓ°×Ó×°ÔØ£¬cmpaÓ°×Ó×°ÔØ£¬¾ùÊÇ¹ı0×°ÔØ
+EPwm2Regs.CMPCTL.all=0x0000;//cmpbå½±å­è£…è½½ï¼Œcmpaå½±å­è£…è½½ï¼Œå‡æ˜¯è¿‡0è£…è½½
 
-EPwm2Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmµÍµçÆ½ÓĞĞ§ 1a
+EPwm2Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmä½ç”µå¹³æœ‰æ•ˆ 1a
 EPwm2Regs.AQCTLA.bit.CAD=AQ_SET;
 
 EPwm2Regs.DBCTL.bit.IN_MODE=0;//epwma source
@@ -191,21 +191,21 @@ EPwm2Regs.DBRED= deadtime; // RED = 200 TBCLKs
 
 
 // EPWM Module 3 config
-EPwm3Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100±íÊ¾10k
+EPwm3Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100è¡¨ç¤º10k
 EPwm3Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
 EPwm3Regs.TBCTR=0;
-EPwm3Regs.TBCTL.bit.FREE_SOFT=0;//×ÔÓÉÔËĞĞ
-EPwm3Regs.TBCTL.bit.PHSDIR=1;//µİÔö¼ÆÊı
+EPwm3Regs.TBCTL.bit.FREE_SOFT=0;//è‡ªç”±è¿è¡Œ
+EPwm3Regs.TBCTL.bit.PHSDIR=1;//é€’å¢è®¡æ•°
 EPwm3Regs.TBCTL.bit.CLKDIV=0;
 EPwm3Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm3Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm3Regs.TBCTL.bit.PRDLD=0;//Ó°×ÓÄ£Ê½
+EPwm3Regs.TBCTL.bit.PRDLD=0;//å½±å­æ¨¡å¼
 EPwm3Regs.TBCTL.bit.PHSEN=0;//
-EPwm3Regs.TBCTL.bit.CTRMODE=2;//Ôö¼õ
+EPwm3Regs.TBCTL.bit.CTRMODE=2;//å¢å‡
 
-EPwm3Regs.CMPCTL.all=0x0000;//cmpbÓ°×Ó×°ÔØ£¬cmpaÓ°×Ó×°ÔØ£¬¾ùÊÇ¹ı0×°ÔØ
+EPwm3Regs.CMPCTL.all=0x0000;//cmpbå½±å­è£…è½½ï¼Œcmpaå½±å­è£…è½½ï¼Œå‡æ˜¯è¿‡0è£…è½½
 
-EPwm3Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmµÍµçÆ½ÓĞĞ§ 1a
+EPwm3Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmä½ç”µå¹³æœ‰æ•ˆ 1a
 EPwm3Regs.AQCTLA.bit.CAD=AQ_SET;
 
 EPwm3Regs.DBCTL.bit.IN_MODE=0;//epwma source
