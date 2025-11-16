@@ -39,46 +39,46 @@ void InitGpio(void)
    GpioCtrlRegs.GPCMUX1.all = 0x0000;     // GPIO functionality GPIO64-GPIO79
    GpioCtrlRegs.GPCMUX2.all = 0x0000;     // GPIO functionality GPIO80-GPIO95
 
-   GpioCtrlRegs.GPAMUX2.bit.GPIO17=0;//ÉèÖÃledµÆ½ÅÎªGPIO 
+   GpioCtrlRegs.GPAMUX2.bit.GPIO17=0;//è®¾ç½®ledç¯è„šä¸ºGPIO 
    
-   GpioCtrlRegs.GPAMUX2.bit.GPIO21=0;//AD760x RESTAD Òı½Å ÉèÖÃÎªGPIO
-   GpioCtrlRegs.GPAMUX2.bit.GPIO23=0;//AD760x CONVST Òı½Å ÉèÖÃÎªGPIO
-   GpioCtrlRegs.GPAMUX2.bit.GPIO27=0;//AD760x AD_RD Òı½Å ÉèÖÃÎªGPIO
+   GpioCtrlRegs.GPAMUX2.bit.GPIO21=0;//AD760x RESTAD å¼•è„š è®¾ç½®ä¸ºGPIO
+   GpioCtrlRegs.GPAMUX2.bit.GPIO23=0;//AD760x CONVST å¼•è„š è®¾ç½®ä¸ºGPIO
+   GpioCtrlRegs.GPAMUX2.bit.GPIO27=0;//AD760x AD_RD å¼•è„š è®¾ç½®ä¸ºGPIO
 
    GpioCtrlRegs.GPBMUX1.bit.GPIO32=0;//
-   GpioCtrlRegs.GPBMUX1.bit.GPIO33=0;//AD760x BUSYAD Òı½Å ÉèÖÃÎªGPIO
-   GpioCtrlRegs.GPBMUX2.bit.GPIO48=0;//AD760x AD_CS Òı½Å ÉèÖÃÎªGPIO
+   GpioCtrlRegs.GPBMUX1.bit.GPIO33=0;//AD760x BUSYAD å¼•è„š è®¾ç½®ä¸ºGPIO
+   GpioCtrlRegs.GPBMUX2.bit.GPIO48=0;//AD760x AD_CS å¼•è„š è®¾ç½®ä¸ºGPIO
 
-   GpioCtrlRegs.GPBMUX1.bit.GPIO35=0;//LED_GREEN Òı½Å ÉèÖÃÎªGPIO
-   GpioCtrlRegs.GPBMUX1.bit.GPIO38=0;//LED_RED Òı½Å ÉèÖÃÎªGPIO
+   GpioCtrlRegs.GPBMUX1.bit.GPIO35=0;//LED_GREEN å¼•è„š è®¾ç½®ä¸ºGPIO
+   GpioCtrlRegs.GPBMUX1.bit.GPIO38=0;//LED_RED å¼•è„š è®¾ç½®ä¸ºGPIO
    GpioCtrlRegs.GPAMUX2.bit.GPIO28=0;
-   GpioCtrlRegs.GPAMUX2.bit.GPIO29=0;//pwm_en Îªgpio
+   GpioCtrlRegs.GPAMUX2.bit.GPIO29=0;//pwm_en ä¸ºgpio
 
-   GpioCtrlRegs.GPBMUX1.bit.GPIO39=0;//RDC_CS Òı½Å ÉèÖÃÎªGPIO
-   GpioCtrlRegs.GPAMUX1.bit.GPIO13=0;//ÉèÖÃ alarmÎªgpio
+   GpioCtrlRegs.GPBMUX1.bit.GPIO39=0;//RDC_CS å¼•è„š è®¾ç½®ä¸ºGPIO
+   GpioCtrlRegs.GPAMUX1.bit.GPIO13=0;//è®¾ç½® alarmä¸ºgpio
 
-   GpioCtrlRegs.GPAMUX1.bit.GPIO14=0;//ÉèÖÃDC_ON ½ÅÎªGPIO 
+   GpioCtrlRegs.GPAMUX1.bit.GPIO14=0;//è®¾ç½®DC_ON è„šä¸ºGPIO 
    
-   GpioCtrlRegs.GPAMUX1.bit.GPIO15=0;//ÉèÖÃDC_ON ½ÅÎªGPIO 
-   GpioCtrlRegs.GPAMUX1.bit.GPIO14=0;//ÉèÖÃDC_ON ½ÅÎªGPIO 
+   GpioCtrlRegs.GPAMUX1.bit.GPIO15=0;//è®¾ç½®DC_ON è„šä¸ºGPIO 
+   GpioCtrlRegs.GPAMUX1.bit.GPIO14=0;//è®¾ç½®DC_ON è„šä¸ºGPIO 
    GpioCtrlRegs.GPAMUX2.bit.GPIO16=0;// 
 
-   GpioCtrlRegs.GPAMUX1.bit.GPIO8=0;//ÉèÖÃCS_FM25 ½ÅÎªGPIO 
+   GpioCtrlRegs.GPAMUX1.bit.GPIO8=0;//è®¾ç½®CS_FM25 è„šä¸ºGPIO 
 
-   GpioCtrlRegs.GPAMUX2.bit.GPIO22=0;//ÉèÖÃINPUT1 ½ÅÎªGPIO 
-   GpioCtrlRegs.GPBMUX2.bit.GPIO57=0;//ÉèÖÃINPUT2 ½ÅÎªGPIO
-   GpioCtrlRegs.GPBMUX2.bit.GPIO58=0;//ÉèÖÃINPUT3 ½ÅÎªGPIO
+   GpioCtrlRegs.GPAMUX2.bit.GPIO22=0;//è®¾ç½®INPUT1 è„šä¸ºGPIO 
+   GpioCtrlRegs.GPBMUX2.bit.GPIO57=0;//è®¾ç½®INPUT2 è„šä¸ºGPIO
+   GpioCtrlRegs.GPBMUX2.bit.GPIO58=0;//è®¾ç½®INPUT3 è„šä¸ºGPIO
 
-   GpioCtrlRegs.GPBMUX2.bit.GPIO59=0;//ÉèÖÃOUTPU1 ½ÅÎªGPIO
-   GpioCtrlRegs.GPBMUX2.bit.GPIO60=0;//ÉèÖÃOUTPU2 ½ÅÎªGPIO
-   GpioCtrlRegs.GPBMUX2.bit.GPIO61=0;//ÉèÖÃOUTPU3 ½ÅÎªGPIO
-   GpioCtrlRegs.GPBMUX2.bit.GPIO49=0;//ÉèÖÃOUTPU4 ½ÅÎªGPIO
+   GpioCtrlRegs.GPBMUX2.bit.GPIO59=0;//è®¾ç½®OUTPU1 è„šä¸ºGPIO
+   GpioCtrlRegs.GPBMUX2.bit.GPIO60=0;//è®¾ç½®OUTPU2 è„šä¸ºGPIO
+   GpioCtrlRegs.GPBMUX2.bit.GPIO61=0;//è®¾ç½®OUTPU3 è„šä¸ºGPIO
+   GpioCtrlRegs.GPBMUX2.bit.GPIO49=0;//è®¾ç½®OUTPU4 è„šä¸ºGPIO
 
-   GpioCtrlRegs.GPAMUX2.bit.GPIO20=0;//ÉèÖÃSYNC ½ÅÎªGPIO 
+   GpioCtrlRegs.GPAMUX2.bit.GPIO20=0;//è®¾ç½®SYNC è„šä¸ºGPIO 
 
-   GpioCtrlRegs.GPCMUX1.bit.GPIO78=0;//ÉèÖÃÎªGPIO W
-   GpioCtrlRegs.GPCMUX1.bit.GPIO77=0;//ÉèÖÃÎªGPIO V
-   GpioCtrlRegs.GPCMUX1.bit.GPIO76=0;//ÉèÖÃÎªGPIO U
+   GpioCtrlRegs.GPCMUX1.bit.GPIO78=0;//è®¾ç½®ä¸ºGPIO W
+   GpioCtrlRegs.GPCMUX1.bit.GPIO77=0;//è®¾ç½®ä¸ºGPIO V
+   GpioCtrlRegs.GPCMUX1.bit.GPIO76=0;//è®¾ç½®ä¸ºGPIO U
    
    
   
@@ -87,43 +87,43 @@ void InitGpio(void)
    GpioCtrlRegs.GPBDIR.all = 0x0000;      // GPIO32-GPIO63 are inputs   
    GpioCtrlRegs.GPCDIR.all = 0x0000;      // GPI064-GPIO95 are inputs
 
-   GpioCtrlRegs.GPADIR.bit.GPIO17 = 1;      // ÉèÖÃLEDµÆ½ÅÎªÊä³ö
+   GpioCtrlRegs.GPADIR.bit.GPIO17 = 1;      // è®¾ç½®LEDç¯è„šä¸ºè¾“å‡º
    
-   GpioCtrlRegs.GPADIR.bit.GPIO21 = 1;      // AD760x RESTAD Òı½Å ÉèÖÃÎªÊä³ö
-   GpioCtrlRegs.GPADIR.bit.GPIO23 = 1;      // AD760x CONVST Òı½Å ÉèÖÃÎªÊä³ö
-   GpioCtrlRegs.GPADIR.bit.GPIO27 = 1;      // AD760x AD_RD Òı½Å ÉèÖÃÎªÊä³ö
+   GpioCtrlRegs.GPADIR.bit.GPIO21 = 1;      // AD760x RESTAD å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
+   GpioCtrlRegs.GPADIR.bit.GPIO23 = 1;      // AD760x CONVST å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
+   GpioCtrlRegs.GPADIR.bit.GPIO27 = 1;      // AD760x AD_RD å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
    GpioCtrlRegs.GPBDIR.bit.GPIO32 = 0;      // 
-   GpioCtrlRegs.GPBDIR.bit.GPIO33 = 0;      // AD760x BUSYAD Òı½Å ÉèÖÃÎªÊäÈë
-   GpioCtrlRegs.GPBDIR.bit.GPIO48 = 1;      // AD760x AD_CS Òı½Å ÉèÖÃÎªÊä³ö
+   GpioCtrlRegs.GPBDIR.bit.GPIO33 = 0;      // AD760x BUSYAD å¼•è„š è®¾ç½®ä¸ºè¾“å…¥
+   GpioCtrlRegs.GPBDIR.bit.GPIO48 = 1;      // AD760x AD_CS å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
 
-   GpioCtrlRegs.GPBDIR.bit.GPIO35 = 1;      // LED_GREEN Òı½Å ÉèÖÃÎªÊä³ö 
-   GpioCtrlRegs.GPBDIR.bit.GPIO38 = 1;      // LED_RED Òı½Å ÉèÖÃÎªÊä³ö 
-   GpioCtrlRegs.GPADIR.bit.GPIO28 = 1;      // LED_YELLOW Òı½Å ÉèÖÃÎªÊä³ö
+   GpioCtrlRegs.GPBDIR.bit.GPIO35 = 1;      // LED_GREEN å¼•è„š è®¾ç½®ä¸ºè¾“å‡º 
+   GpioCtrlRegs.GPBDIR.bit.GPIO38 = 1;      // LED_RED å¼•è„š è®¾ç½®ä¸ºè¾“å‡º 
+   GpioCtrlRegs.GPADIR.bit.GPIO28 = 1;      // LED_YELLOW å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
    Pwm_EN_1;
-   GpioCtrlRegs.GPADIR.bit.GPIO29= 1 ;//PEM_ENÎªÊä³ö
+   GpioCtrlRegs.GPADIR.bit.GPIO29= 1 ;//PEM_ENä¸ºè¾“å‡º
 
-   GpioCtrlRegs.GPBDIR.bit.GPIO39 = 1;      // RDC_CS Òı½Å ÉèÖÃÎªÊä³ö 
-   GpioCtrlRegs.GPADIR.bit.GPIO13=0;//ÉèÖÃalarmÎªÊäÈë
-   GpioCtrlRegs.GPADIR.bit.GPIO15 = 1;      // ÉèÖÃDC_ONÎªÊä³ö
+   GpioCtrlRegs.GPBDIR.bit.GPIO39 = 1;      // RDC_CS å¼•è„š è®¾ç½®ä¸ºè¾“å‡º 
+   GpioCtrlRegs.GPADIR.bit.GPIO13=0;//è®¾ç½®alarmä¸ºè¾“å…¥
+   GpioCtrlRegs.GPADIR.bit.GPIO15 = 1;      // è®¾ç½®DC_ONä¸ºè¾“å‡º
    DC_ON_1;
-    GpioCtrlRegs.GPADIR.bit.GPIO14= 1;      // ÉèÖÃDC_ONÎªÊä³ö
-   GpioCtrlRegs.GPADIR.bit.GPIO16 = 1;      // ÉèÖÃFAN_ONÎªÊä³ö
+    GpioCtrlRegs.GPADIR.bit.GPIO14= 1;      // è®¾ç½®DC_ONä¸ºè¾“å‡º
+   GpioCtrlRegs.GPADIR.bit.GPIO16 = 1;      // è®¾ç½®FAN_ONä¸ºè¾“å‡º
 
-   GpioCtrlRegs.GPADIR.bit.GPIO8  = 1;      // ÉèÖÃCS_FM25ÎªÊä³ö
+   GpioCtrlRegs.GPADIR.bit.GPIO8  = 1;      // è®¾ç½®CS_FM25ä¸ºè¾“å‡º
    
-   GpioCtrlRegs.GPADIR.bit.GPIO22 = 0;      // INPUT1 Òı½Å ÉèÖÃÎªÊäÈë
-   GpioCtrlRegs.GPBDIR.bit.GPIO57 = 0;      // INPUT2 Òı½Å ÉèÖÃÎªÊäÈë
-   GpioCtrlRegs.GPBDIR.bit.GPIO58 = 0;      // INPUT3 Òı½Å ÉèÖÃÎªÊäÈë
+   GpioCtrlRegs.GPADIR.bit.GPIO22 = 0;      // INPUT1 å¼•è„š è®¾ç½®ä¸ºè¾“å…¥
+   GpioCtrlRegs.GPBDIR.bit.GPIO57 = 0;      // INPUT2 å¼•è„š è®¾ç½®ä¸ºè¾“å…¥
+   GpioCtrlRegs.GPBDIR.bit.GPIO58 = 0;      // INPUT3 å¼•è„š è®¾ç½®ä¸ºè¾“å…¥
 
-   GpioCtrlRegs.GPBDIR.bit.GPIO59 = 1;      // OUTPU1  Òı½Å ÉèÖÃÎªÊä³ö
-   GpioCtrlRegs.GPBDIR.bit.GPIO60 = 1;      // OUTPU2  Òı½Å ÉèÖÃÎªÊä³ö
-   GpioCtrlRegs.GPBDIR.bit.GPIO61 = 1;      // OUTPU3  Òı½Å ÉèÖÃÎªÊä³ö
-   GpioCtrlRegs.GPBDIR.bit.GPIO49 = 1;      // OUTPU4  Òı½Å ÉèÖÃÎªÊä³ö
+   GpioCtrlRegs.GPBDIR.bit.GPIO59 = 1;      // OUTPU1  å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
+   GpioCtrlRegs.GPBDIR.bit.GPIO60 = 1;      // OUTPU2  å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
+   GpioCtrlRegs.GPBDIR.bit.GPIO61 = 1;      // OUTPU3  å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
+   GpioCtrlRegs.GPBDIR.bit.GPIO49 = 1;      // OUTPU4  å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
 
-   GpioCtrlRegs.GPADIR.bit.GPIO20 = 1;      // SYNC  Òı½Å ÉèÖÃÎªÊä³ö
-   GpioCtrlRegs.GPCDIR.bit.GPIO78=0;//ÊäÈë W
-   GpioCtrlRegs.GPCDIR.bit.GPIO77=0;//ÊäÈë V
-   GpioCtrlRegs.GPCDIR.bit.GPIO76=0;//ÊäÈë U
+   GpioCtrlRegs.GPADIR.bit.GPIO20 = 1;      // SYNC  å¼•è„š è®¾ç½®ä¸ºè¾“å‡º
+   GpioCtrlRegs.GPCDIR.bit.GPIO78=0;//è¾“å…¥ W
+   GpioCtrlRegs.GPCDIR.bit.GPIO77=0;//è¾“å…¥ V
+   GpioCtrlRegs.GPCDIR.bit.GPIO76=0;//è¾“å…¥ U
    
    
 
@@ -143,21 +143,21 @@ void InitGpio(void)
    GpioCtrlRegs.GPBPUD.all = 0x0000;      // Pullup's enabled GPIO32-GPIO63
    GpioCtrlRegs.GPCPUD.all = 0x0000;      // Pullup's enabled GPIO64-GPIO79
 
-   GpioDataRegs.GPADAT.bit.GPIO17=1;//ÉèÖÃLEDµÆÒı½ÅÊä³ö¸ßµçÆ½
-   
-   GpioDataRegs.GPADAT.bit.GPIO21=0;//AD760x RESTAD Òı½Å Êä³öµÍµçÆ½
-   GpioDataRegs.GPADAT.bit.GPIO23=1;//AD760x CONVST Òı½Å Êä³ö¸ßµçÆ½
-   GpioDataRegs.GPADAT.bit.GPIO27=1;//AD760x AD_RD Òı½Å Êä³ö¸ßµçÆ½
-   GpioDataRegs.GPBDAT.bit.GPIO48=1;//AD760x AD_CS Òı½Å Êä³ö¸ßµçÆ½
+    GpioDataRegs.GPADAT.bit.GPIO15=1;//DC_ON ßµÆ½,ÎªÍµÆ½Ê± Ä¸ß¼ÌµÕº
+     GpioDataRegs.GPADAT.bit.GPIO16=1;//
+     GpioDataRegs.GPADAT.bit.GPIO8=1;//
+    GpioDataRegs.GPBDAT.bit.GPIO59=1;//
+    GpioDataRegs.GPBDAT.bit.GPIO60=1;//
+    GpioDataRegs.GPBDAT.bit.GPIO61=1;//
+    GpioDataRegs.GPBDAT.bit.GPIO49=1;//
+    GpioDataRegs.GPADAT.bit.GPIO20=1;// SYNCßµÆ½ 
+    GpioCtrlRegs.GPBMUX2.bit.GPIO50=1;//  a
+    GpioCtrlRegs.GPBMUX2.bit.GPIO51=1;//  b
+     GpioCtrlRegs.GPBMUX2.bit.GPIO53=1;//  c
 
-   
-   GpioDataRegs.GPBDAT.bit.GPIO35=1;// LED_red Òı½Å 
-   GpioDataRegs.GPBDAT.bit.GPIO38=1;// LED_greed Òı½Å
-   GpioDataRegs.GPADAT.bit.GPIO28=1;// 
-
-   GpioDataRegs.GPBDAT.bit.GPIO39=1;// 
-
-   GpioDataRegs.GPADAT.bit.GPIO15=1;//ÉèÖÃDC_ON Êä³ö¸ßµçÆ½,ÎªµÍµçÆ½Ê± Ä¸Ïß¼ÌµçÆ÷±ÕºÏ
+      GpioIntRegs.GPIOXINT3SEL.bit.GPIOSEL=53;//gpio53 Îªâ²¿Ğ¶3
+    XIntruptRegs.XINT3CR.bit.ENABLE=1;//â²¿Ğ¶Ï´
+    XIntruptRegs.XINT3CR.bit.POLARITY=3;//Ğ§
    GpioDataRegs.GPADAT.bit.GPIO16=1;//
 
    GpioDataRegs.GPADAT.bit.GPIO8=1;//
@@ -167,16 +167,16 @@ void InitGpio(void)
    GpioDataRegs.GPBDAT.bit.GPIO61=1;//
    GpioDataRegs.GPBDAT.bit.GPIO49=1;//
 
-   GpioDataRegs.GPADAT.bit.GPIO20=1;//ÉèÖÃ SYNCÊä³ö¸ßµçÆ½
+   GpioDataRegs.GPADAT.bit.GPIO20=1;//è®¾ç½® SYNCè¾“å‡ºé«˜ç”µå¹³
 
 
-   GpioCtrlRegs.GPBMUX2.bit.GPIO50=1;// ±àÂëÆ÷ a
-   GpioCtrlRegs.GPBMUX2.bit.GPIO51=1;// ±àÂëÆ÷ b
-   GpioCtrlRegs.GPBMUX2.bit.GPIO53=1;// ±àÂëÆ÷ c
+   GpioCtrlRegs.GPBMUX2.bit.GPIO50=1;// ç¼–ç å™¨ a
+   GpioCtrlRegs.GPBMUX2.bit.GPIO51=1;// ç¼–ç å™¨ b
+   GpioCtrlRegs.GPBMUX2.bit.GPIO53=1;// ç¼–ç å™¨ c
 
-   GpioIntRegs.GPIOXINT3SEL.bit.GPIOSEL=53;//gpio53 ×÷ÎªÍâ²¿ÖĞ¶Ï3ÊäÈëÒı½Å
-   XIntruptRegs.XINT3CR.bit.ENABLE=1;//Íâ²¿ÖĞ¶Ï´ò¿ª
-   XIntruptRegs.XINT3CR.bit.POLARITY=3;//ÉÏÉıÑØÓĞĞ§
+   GpioIntRegs.GPIOXINT3SEL.bit.GPIOSEL=53;//gpio53 ä½œä¸ºå¤–éƒ¨ä¸­æ–­3è¾“å…¥å¼•è„š
+   XIntruptRegs.XINT3CR.bit.ENABLE=1;//å¤–éƒ¨ä¸­æ–­æ‰“å¼€
+   XIntruptRegs.XINT3CR.bit.POLARITY=3;//ä¸Šå‡æ²¿æœ‰æ•ˆ
 
    EDIS;
 
@@ -186,7 +186,7 @@ void InitGpio(void)
    InitSpiaGpio();
 
    EALLOW;
-   GpioDataRegs.GPBDAT.bit.GPIO35=1;// LED_red Òı½Å 
+   GpioDataRegs.GPBDAT.bit.GPIO35=1;// LED_red å¼•è„š 
    EDIS;
    
 
@@ -280,91 +280,97 @@ void CPU_RUN(void)
 
 void eva_open(void)
 {
-	EALLOW;
-	GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 1;   // Configure GPIO0 as EPWM1A
-	GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 1;   // Configure GPIO1 as EPWM1B
-	GpioCtrlRegs.GPAMUX1.bit.GPIO2 = 1;   // Configure GPIO2 as EPWM2A
-	GpioCtrlRegs.GPAMUX1.bit.GPIO3 = 1;   // Configure GPIO3 as EPWM2B
-	GpioCtrlRegs.GPAMUX1.bit.GPIO4 = 1;   // Configure GPIO4 as EPWM3A
-	GpioCtrlRegs.GPAMUX1.bit.GPIO5 = 1;   // Configure GPIO5 as EPWM3B
+     EALLOW;
+     GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 1;   // Configure GPIO0 as EPWM1A
+     GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 1;   // Configure GPIO1 as EPWM1B
+     GpioCtrlRegs.GPAMUX1.bit.GPIO2 = 1;   // Configure GPIO2 as EPWM2A
+     GpioCtrlRegs.GPAMUX1.bit.GPIO3 = 1;   // Configure GPIO3 as EPWM2B
+     GpioCtrlRegs.GPAMUX1.bit.GPIO4 = 1;   // Configure GPIO4 as EPWM3A
+     GpioCtrlRegs.GPAMUX1.bit.GPIO5 = 1;   // Configure GPIO5 as EPWM3B
 
+        
    
-   EDIS;
+     EDIS;
 
 
 }
 
 void eva_close(void)
 {
-	EALLOW;
-	//  1.3.5Ç¿ÖÆ¸ß£¬2.4.6ÓĞĞ§
+    EALLOW;
+    //  1.3.5Ç¿Æ¸ß£2.4.6Ğ§
 
-	GpioCtrlRegs.GPADIR.bit.GPIO0=1;
-	GpioCtrlRegs.GPADIR.bit.GPIO2=1;
-	GpioCtrlRegs.GPADIR.bit.GPIO4=1;
+    GpioCtrlRegs.GPADIR.bit.GPIO0=1;
+    GpioCtrlRegs.GPADIR.bit.GPIO2=1;
+    GpioCtrlRegs.GPADIR.bit.GPIO4=1;
 
-	GpioDataRegs.GPASET.bit.GPIO0=1;
-	GpioDataRegs.GPASET.bit.GPIO2=1;
-	GpioDataRegs.GPASET.bit.GPIO4=1;
+    GpioDataRegs.GPASET.bit.GPIO0=1;
+    GpioDataRegs.GPASET.bit.GPIO2=1;
+    GpioDataRegs.GPASET.bit.GPIO4=1;
 
-	GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 0;   // Configure GPIO0 as EPWM1A
+    //GPIOÎªÍ¨Ä£Ê½
+    GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 0;   // Configure GPIO0 as EPWM1A
+    GpioCtrlRegs.GPAMUX1.bit.GPIO2 = 0;   // Configure GPIO2 as EPWM2A
+    GpioCtrlRegs.GPAMUX1.bit.GPIO4 = 0;   // Configure GPIO4 as EPWM3A
+    
 
-	GpioCtrlRegs.GPAMUX1.bit.GPIO2 = 0;   // Configure GPIO2 as EPWM2A
+    EPwm1Regs.CMPA.half.CMPA =3375; //
+    EPwm2Regs.CMPA.half.CMPA = 3375; //
+    EPwm3Regs.CMPA.half.CMPA = 3375; //
 
-	GpioCtrlRegs.GPAMUX1.bit.GPIO4 = 0;   // Configure GPIO4 as EPWM3A
+    EDIS;
 
-
-	EPwm1Regs.CMPA.half.CMPA = 3375; //
-	EPwm2Regs.CMPA.half.CMPA = 3375; //
-	EPwm3Regs.CMPA.half.CMPA = 3375; //
-	EDIS;
-	Run_PMSM=2;
-	LocationFlag=1;
-	Speed_Ui=0;
-	ID_Ui=0;
-	IQ_Ui=0;
-	Position=1;
-	j=0;
-	speed_dis=0;
-	IQ_Given=0;
-	OldRawTheta=0;
-	SpeedRef=0;
-	speed_give=0;
-	Modulation=0.25;    // µ÷ÖÆ±È
-	O_Current=0;
-//	PosCount=0;
-//	OldRawThetaPos=0;
-	Hall_Fault=0;
-//	Speed_run=0;
-	EPwm4Regs.CMPA.half.CMPA=0;//dac1
-	EPwm4Regs.CMPB=0;//dac2
+   Run_PMSM=2;
+   LocationFlag=1;
+   Speed_Ui=0;
+   ID_Ui=0;
+   IQ_Ui=0;
+   Position=1;
+   j=0;
+   speed_dis=0;
+   IQ_Given=0;
+   OldRawTheta=0;
+   SpeedRef=0;
+   speed_give=0;
+   Modulation=0.25;    // Æ±
+   O_Current=0;
+   PosCount=0;
+   OldRawThetaPos=0;
+   Hall_Fault=0;
+   Speed_run=0;
+   EPwm4Regs.CMPA.half.CMPA=0;//dac1
+   EPwm4Regs.CMPB=0;//dac2
 }
 
 
 void  IPM_BaoHu(void)
 {
-	static Uint32 i=0;
-	Uint16 j=0;
+    static Uint32 i=0;
+    Uint16 j=0;
 
-	j=GpioDataRegs.GPADAT.bit.GPIO13;//¶ÁÈ¡¹ÊÕÏÎ»
-	if(j==0)
-	{
-		i++;
-		if(i==1)
-		{
-			DC_ON_1;
+    j=GpioDataRegs.GPADAT.bit.GPIO13;//È¡Î»
+    if(j==0)
+    {
+        i++;
+        if(i==1)
+        {
+            DC_ON_1;
+            
+            eva_close();
+            Pwm_EN_1;
+            IPM_Fault=1;
+            	
 
-			eva_close();
-			Pwm_EN_1;
-			IPM_Fault=1;
+        }
 
-		}
+    }
+    else
+    {i=0;
+	
+    
+    }
 
-	}
-	else
-	{
-		i=0;
-	}
+    
 
 
 

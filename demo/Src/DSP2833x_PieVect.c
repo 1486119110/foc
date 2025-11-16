@@ -187,16 +187,16 @@ const struct PIE_VECT_TABLE PieVectTableInit = {
 void InitPieVectTable(void)
 {
 	int16	i;
-	Uint32 *Source = (void *) &PieVectTableInit;
-	Uint32 *Dest = (void *) &PieVectTable;
+	Uint32 *Source = (void *) &PieVectTableInit;            //Ĭж
+	Uint32 *Dest = (void *) &PieVectTable;                  //ʵʹõжַ
 		
 	EALLOW;	
 	for(i=0; i < 128; i++)
-		*Dest++ = *Source++;	
+		*Dest++ = *Source++;	                            //Ĭж PieVectTableInit е PieVectTable
 	EDIS;
 
 	// Enable the PIE Vector Table
-	PieCtrlRegs.PIECTRL.bit.ENPIE = 1;	
+	PieCtrlRegs.PIECTRL.bit.ENPIE = 1;	                    // PIE 
 			
 }
 

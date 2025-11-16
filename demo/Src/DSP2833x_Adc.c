@@ -13,7 +13,6 @@
 
 #include "DSP2833x_Device.h"     // DSP2833x Headerfile Include File
 #include "DSP2833x_Examples.h"   // DSP2833x Examples Include File
-#include "motor.h"    // define the parameters of motor
 
 extern _iq ia;
 extern _iq ib;
@@ -34,8 +33,8 @@ float32 IA_MAX=0;
 float32 IB_MAX=0;
 float32 IC_MAX=0;
 
-int16 HALL_U=0; //Uœ‡ªÙ∂˚µƒ¡„µ„
-int16 HALL_V=0; //Vœ‡ªÙ∂˚µƒ¡„µ„
+Uint16 GuoliuZhi=0;
+int16 HALL_V=0; //VÁõ∏ÈúçÂ∞îÁöÑÈõ∂ÁÇπ
 
 float32 U_dc=0;
 Uint16 U_dc_dis=0;
@@ -45,7 +44,7 @@ Uint16 DC_ON_flag=0;
 Uint16 DC_ON_OPEN=0;
 Uint32 DC_ON_CNT=0;
 
-void DelayUS(Uint16 N_US) //1US—” ± 
+void DelayUS(Uint16 N_US) //1USÂª∂Êó∂ 
 {
     Uint16 i=0;  
 
@@ -133,18 +132,18 @@ void ADC_Soc_Init(void)
     DELAY_US(6000L);         // Delay before converting ADC channels
 
 
-     AdcRegs.ADCMAXCONV.bit.MAX_CONV1= 0x000f;       	// ◊‹π≤16∏ˆ
-     AdcRegs.ADCTRL1.bit.ACQ_PS=0xf;//≤…ºØøÌ∂» 16
+     AdcRegs.ADCMAXCONV.bit.MAX_CONV1= 0x000f;       	// ÊÄªÂÖ±16‰∏™
+     AdcRegs.ADCTRL1.bit.ACQ_PS=0xf;//ÈááÈõÜÂÆΩÂ∫¶ 16
      AdcRegs.ADCTRL3.bit.ADCCLKPS=0X1;//12.5m
-     AdcRegs.ADCTRL1.bit.SEQ_CASC=0x1;//º∂¡™
-     AdcRegs.ADCTRL3.bit.SMODE_SEL=0;//À≥–Ú≤…—˘
+     AdcRegs.ADCTRL1.bit.SEQ_CASC=0x1;//Á∫ßËÅî
+     AdcRegs.ADCTRL3.bit.SMODE_SEL=0;//È°∫Â∫èÈááÊ†∑
      AdcRegs.ADCTRL2.bit.EPWM_SOCA_SEQ1 = 1;// Enable SOCA from ePWM to start SEQ1
      AdcRegs.ADCTRL2.bit.INT_ENA_SEQ1 = 0;  // Enable SEQ1 interrupt (every EOS)
 
 
 
      
-     //À≥–Ú÷∏∂®
+     //È°∫Â∫èÊåáÂÆö
       AdcRegs.ADCCHSELSEQ1.bit.CONV00 = 0x0;
       AdcRegs.ADCCHSELSEQ1.bit.CONV01=0x1;
       AdcRegs.ADCCHSELSEQ1.bit.CONV02=0x2;
@@ -179,12 +178,12 @@ void Ad_CaiJi(void)
 {	
     
 
-
-       //∂¡»°
-
-while (AdcRegs.ADCST.bit.SEQ1_BSY == 1)
+    //»¥ADC
+    while (AdcRegs.ADCST.bit.SEQ1_BSY == 1)
         {;}
 
+
+       //Õ®‘µ4Œª–ßŒª
        AD_BUF[0]= AdcRegs.ADCRESULT0>>4;
        AD_BUF[1]= AdcRegs.ADCRESULT1>>4;
        AD_BUF[2]= AdcRegs.ADCRESULT2>>4;
@@ -203,11 +202,11 @@ while (AdcRegs.ADCST.bit.SEQ1_BSY == 1)
        AD_BUF[15]= AdcRegs.ADCRESULT15>>4;
 
 	
-
+     //ÿ∂◊¥Ã¨¬∂HALL÷µ-------∆Ø÷µ
      if(Run_PMSM==2)
      {
           HALL_V=AD_BUF[11]+AD_BUF[10]+AD_BUF[9]+AD_BUF[8];//
-          HALL_V=HALL_V>>2;
+          HALL_V=HALL_V>>2;     //>> 2 ‡µ±⁄≥4√µ∆Ω÷µ
           
           HALL_U=AD_BUF[15]+AD_BUF[14]+AD_BUF[13]+AD_BUF[12];//
           HALL_U=HALL_U>>2;
@@ -220,120 +219,118 @@ while (AdcRegs.ADCST.bit.SEQ1_BSY == 1)
      ADC_U=AD_BUF[15]+AD_BUF[14]+AD_BUF[13]+AD_BUF[12];//
      ADC_U=ADC_U>>2;
 //0.732421875=3000mv/4096
-//0.010986328125=0.732421875*0.01*1.5  1mv 0.01∞≤ 
-     ic=_IQdiv(_IQmpy((_IQ(ADC_U)-_IQ(HALL_U)),_IQ(0.010986328125)),_IQ(E_Ding_DianLiu));//MV
+//0.010986328125=0.732421875*0.01*1.5  1mv 0.01 ------------ ADC ÷µ◊™Œ™Œªƒªœµ
+     ic=_IQdiv(_IQmpy((_IQ(ADC_U)-_IQ(HALL_U)),_IQ(0.010986328125)),_IQ(E_Ding_DianLiu));//MV◊™Œ™IQ ΩÀ∑
     
      ib=_IQdiv(_IQmpy((_IQ(ADC_V)-_IQ(HALL_V)),_IQ(0.010986328125)),_IQ(E_Ding_DianLiu));//MV
      
      ia=-ic-ib;    // Compute phase-c current
 
+     
 
 }
 
 
-void DC_Link(void)//º∆À„ƒ∏œﬂµÁ—π
+void DC_Link(void) // ƒ∏ﬂµ—π
 {
-   
-    U_dc=0.2951*(AD_BUF[7]+AD_BUF[6]);
-	U_dc=U_dc*0.732421875/2.0;//µÁ—π»°∆Ωæ˘
- 
-    U_dc_dis=U_dc; 
+    U_dc = 0.2951 * (AD_BUF[7] + AD_BUF[6]);
+    U_dc = U_dc * 0.732421875 / 2.0; // 12ŒªADC—π1LSB=3/pow(2,12)
 
-    if((Run_PMSM==1)&&(DC_ON_flag==0))//‘À––÷–µÙµÁ ‘ÚÕ£ª˙
+    U_dc_dis = U_dc;
+
+    // –µÁ£¨Õ£
+    if ((Run_PMSM == 1) && (DC_ON_flag == 0))
     {
-    	if(U_dc_dis<5)//÷¥––Õ£ª˙
-    	{
-    		DC_ON_1;
-    		DC_ON_flag=1;
-    		DC_ON_OPEN=2;
-
-    	}
-
+        if (U_dc_dis < 5) // ÷¥Õ£
+        {
+            DC_ON_1;
+            DC_ON_flag = 1;
+            DC_ON_OPEN = 2;
+        }
     }
 
-  if(U_dc_dis>MaxDCV)//π˝—π£¨÷¥––Õ£ª˙ 31WµÁª˙∂Ó∂®µÁ—π24VDC
-   {
-       DC_ON_1; 
-       DC_ON_flag=1;
-       DC_ON_OPEN=3;
+    // ƒ∏ﬂµ—πﬂ£÷¥Õ£31W Ó∂®—π 24VDC
+    if (U_dc_dis > 30)
+    {
+        DC_ON_1;            //”¶√£Õ£
+        DC_ON_flag = 1;
+        DC_ON_OPEN = 3;
+    }
 
-   }
-
-  if(GpioDataRegs.GPBDAT.bit.GPIO32==1)
-  {
-	  if(U_dc_dis>MaxDCV)
-	  {
-		  DC_ON_1;
-		  DC_ON_flag=1;
-		  DC_ON_OPEN=4;
-		  Pwm_EN_1;
-	  }
-
-
-  }
-
-  
-
+    // GPIO32 ﬂµ∆Ω ±“µ—πﬂ£÷¥Õ£
+    if (GpioDataRegs.GPBDAT.bit.GPIO32 == 1)
+    {
+        if (U_dc_dis > 30)
+        {
+            DC_ON_1;
+            DC_ON_flag = 1;
+            DC_ON_OPEN = 4;
+            Pwm_EN_1;
+        }
+    }
 }
 
-void JiSuan_Dl(void)//º∆À„µÁ¡˜
-{
-	float32 IA,IB,IC;
-	static Uint16 i=0;
+
+       float32 IA,IB,IC;
+    static Uint16 i=0;
+    if(IA>IA_MAX)
+    {
+        IA_MAX=IA;
+    }
+    if(IB>IB_MAX)
+    {
+        IB_MAX=IB;
+    }
+      if(IC>IC_MAX)
+    {
+        IC_MAX=IC;
+    }
+    i++;
+    if(i==300)
+    {
+    I_A=IA_MAX/1.414;//–ß÷µ
+    I_B=IB_MAX/1.414;//–ß÷µ
+    I_C=IC_MAX/1.414;//–ß÷µ
+    i=0;
+    IB_MAX=0;
+    IA_MAX=0;
+    IC_MAX=0;
     
-    IC=(ADC_U-HALL_U)*0.10986328125;//∑≈¥Û10±∂ 
-    IB=(ADC_V-HALL_V)*0.10986328125;//∑≈¥Û10±∂
-    IA=0-IB-IC;
-    if(IB<0.0)
-    {IB=-IB;}
-    if(IA<0.0)
-    {IA=-IA;}
-     if(IC<0.0)
-    {IC=-IC;}
+ if((I_A>GuoliuZhi)||(I_B>GuoliuZhi)||(I_C>GuoliuZhi))
+    {
+        DC_ON_1;
+        
+        eva_close();// Õ£
+        Pwm_EN_1;
+        O_Current=1;
+        Run_PMSM=2;
+            
+    }
+    }
+  if((IA>80.0)||(IB>80.0)||(IC>80.0))
+    {
+        DC_ON_1;
+        eva_close();// Õ£
+        Pwm_EN_1;
+        O_Current=2;
+        Run_PMSM=2;        
+    }
+    temp+=Speed;
+    i++;
+    
+    if(i==10000)
+    {
+     
+    temp=_IQabs(_IQdiv(temp, _IQ(10000)));//∆Ω÷µ
+    speed_dis =_IQtoF(_IQmpy(_IQ(BaseSpeed),temp)); 
+     
+     temp=0;
+     i=0;  
+    
+    }
+     temp=0;
+     i=0;  
 
-     if(IA>IA_MAX)
-     {
-    	 IA_MAX=IA;
-     }
-     if(IB>IB_MAX)
-     {
-    	 IB_MAX=IB;
-     }
-     if(IC>IC_MAX)
-     {
-    	 IC_MAX=IC;
-     }
-     i++;
-     if(i==300)
-     {
-    	 I_A=IA_MAX/1.414;//”––ß÷µ
-    	 I_B=IB_MAX/1.414;//”––ß÷µ
-    	 I_C=IC_MAX/1.414;//”––ß÷µ
-    	 i=0;
-    	 IB_MAX=0;
-    	 IA_MAX=0;
-    	 IC_MAX=0;
-
-
-    	 if((I_A>GuoliuZhi)||(I_B>GuoliuZhi)||(I_C>GuoliuZhi))
-    	 {
-    		 DC_ON_1;
-
-    		 eva_close();//π˝¡˜±£ª§£¨ Õ£ª˙
-    		 Pwm_EN_1;
-    		 O_Current=1;
-    		 Run_PMSM=2;
-
-
-    	 }
-     }
-
-     if((IA>80.0)||(IB>80.0)||(IC>80.0))
-     {
-    	 DC_ON_1;
-    	 eva_close();//π˝¡˜±£ª§£¨ Õ£ª˙
-    	 Pwm_EN_1;
-    	 O_Current=2;
     	 Run_PMSM=2;
 
      }
@@ -345,7 +342,7 @@ void JiSuan_Dl(void)//º∆À„µÁ¡˜
 
 
 
-void JiSuan_AvgSpeed(void)//º∆À„∆Ωæ˘◊™ÀŸ
+void JiSuan_AvgSpeed(void)//ËÆ°ÁÆóÂπ≥ÂùáËΩ¨ÈÄü
 {
     
     static Uint16 i=0;
@@ -359,7 +356,7 @@ void JiSuan_AvgSpeed(void)//º∆À„∆Ωæ˘◊™ÀŸ
     	if(i==10000)
     	{
 
-    		temp=_IQabs(_IQdiv(temp, _IQ(10000)));//«Û∆Ωæ˘÷µ
+    		temp=_IQabs(_IQdiv(temp, _IQ(10000)));//Ê±ÇÂπ≥ÂùáÂÄº
     		speed_dis =_IQtoF(_IQmpy(_IQ(BaseSpeed),temp));
 
     		temp=0;
