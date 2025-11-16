@@ -13,8 +13,8 @@
 
 #include "DSP2833x_Device.h"     // DSP2833x Headerfile Include File
 #include "DSP2833x_Examples.h"   // DSP2833x Examples Include File
-#define deadtime 320
-//_iq LineEncoder=32768000;
+#define deadtime 200
+_iq LineEncoder=32768000;//н╙1000ъ╠
 
 
 //---------------------------------------------------------------------------
@@ -30,6 +30,23 @@ void InitEPwm(void)
  
 }
 
+void  QEP_Init(void)
+{
+ 
+
+      EALLOW;
+    EQep1Regs.QUPRD=1500000;			// Unit Timer for 100Hz at 150 MHz SYSCLKOUT
+    EQep1Regs.QDECCTL.all=0x400;
+    //EQep1Regs.QEPCTL.all=0x820a;//
+    EQep1Regs.QEPCTL.all=0x900a;
+    EQep1Regs.QPOSCNT=0;
+    EQep1Regs.QPOSINIT=0;
+    TotalPulse=_IQmpy(_IQ(4),LineEncoder);//дёИё╛дёй╫бё4000
+    EQep1Regs.QPOSMAX= (Uint16)(TotalPulse>>15);//15н╩Ю╣╠зЁ2^15р╡г╟Q15в╙н╙в╪intй╫4000
+    EQep1Regs.QCAPCTL.all=0x8075;
+    EDIS;
+    
+}
 
 
 
@@ -43,20 +60,20 @@ void Init_Pwm_DAC()
 
     // EPWM Module 4 config
 
-EPwm4Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=TBPRD*Ttbclk,100╠Мй╬20k
+EPwm4Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=TBPRD*Ttbclk,100Х║╗Г╓╨20k
 EPwm4Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
 EPwm4Regs.TBCTR=0;
-EPwm4Regs.TBCTL.bit.FREE_SOFT=0;//втситкпп
-EPwm4Regs.TBCTL.bit.PHSDIR=1;//╣щтЖ╪фйЩ
+EPwm4Regs.TBCTL.bit.FREE_SOFT=0;//Х┤╙Г■╠Х©░Х║▄
+EPwm4Regs.TBCTL.bit.PHSDIR=1;//И─▓Е╒·Х╝║Ф∙╟
 EPwm4Regs.TBCTL.bit.CLKDIV=0;
 EPwm4Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm4Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm4Regs.TBCTL.bit.PRDLD=0;//с╟всдёй╫
+EPwm4Regs.TBCTL.bit.PRDLD=0;//Е╫╠Е╜░Ф╗║Е╪▐
 EPwm4Regs.TBCTL.bit.PHSEN=0;//
-EPwm4Regs.TBCTL.bit.CTRMODE=0;//тЖ╪фйЩ
+EPwm4Regs.TBCTL.bit.CTRMODE=0;//Е╒·Х╝║Ф∙╟
 
 
-EPwm4Regs.CMPCTL.all=0x0000;//cmpbс╟всв╟тьё╛cmpaс╟всв╟тьё╛╬Ыйг╧Щ0в╟ть
+EPwm4Regs.CMPCTL.all=0x0000;//cmpbЕ╫╠Е╜░Хё┘Х╫╫О╪▄cmpaЕ╫╠Е╜░Хё┘Х╫╫О╪▄Е²┤Ф≤╞Х©┤0Хё┘Х╫╫
 
 EPwm4Regs.AQCTLA.bit.PRD =  AQ_SET;
 EPwm4Regs.AQCTLA.bit.CAU = AQ_CLEAR;
@@ -72,11 +89,11 @@ EPwm4Regs.CMPB=2000;//dac2
 
 EDIS;
 
-//pwm dac к╣цВё╛ pwm у╪©у╠х 3750 ╤тс╕╣дйг 5v  фДкЭж╣╣дйДЁЖ ╬м╤╝ак╟иё╛ж╩дэйДЁЖуЩ╣Гя╧╣де╤║ё
+//pwm dac Х╞╢Ф≤▌О╪▄ pwm Е█═Г╘╨Ф╞■ 3750 Е╞╧Е╨■Г └Ф≤╞ 5v  Е┘╤Е╝┐Е─╪Г └Х╬⌠Е┤╨ Е╟╠Ф┤┌Д╨├Е░╖О╪▄Е▐╙Х┐╫Х╬⌠Е┤╨Ф╜ёГ■╣Е▌▀Г └Е⌠╕Ц─┌
 
 }
 
-void DAC1_out(_iq data)//dataйг╠Йц╢ж╣
+void DAC1_out(_iq data)//dataФ≤╞Ф═┤Д╧┬Е─╪
 {
     Uint16 temp=0;
     if(data<0)
@@ -94,7 +111,7 @@ void DAC1_out(_iq data)//dataйг╠Йц╢ж╣
 
 }
 
-void DAC2_out(_iq data)//dataйг╠Йц╢ж╣
+void DAC2_out(_iq data)//dataФ≤╞Ф═┤Д╧┬Е─╪
 {
     Uint16 temp=0;
     if(data<0)
@@ -134,23 +151,23 @@ void InitEPwm_1_2_3(void)
     EALLOW;
     
 EPwm1Regs.TBCTR=0;
-EPwm1Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100╠Мй╬10k
+EPwm1Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100Х║╗Г╓╨10k
 T1Period=EPwm1Regs.TBPRD;
 EPwm1Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
-//EPwm1Regs.TBCTL.all=0xa092;//втситкппё╛╢с0©╙й╪╪фйЩ,clkdiv=1,hspclkdiv=2,tbclk=75m,ctr=0,tbprdс╟всв╟ть
+//EPwm1Regs.TBCTL.all=0xa092;//Х┤╙Г■╠Х©░Х║▄О╪▄Д╩▌0Е╪─Е╖▀Х╝║Ф∙╟,clkdiv=1,hspclkdiv=2,tbclk=75m,ctr=0,tbprdЕ╫╠Е╜░Хё┘Х╫╫
 
-EPwm1Regs.TBCTL.bit.FREE_SOFT=0;//втситкпп
-EPwm1Regs.TBCTL.bit.PHSDIR=1;//╣щтЖ╪фйЩ
+EPwm1Regs.TBCTL.bit.FREE_SOFT=0;//Х┤╙Г■╠Х©░Х║▄
+EPwm1Regs.TBCTL.bit.PHSDIR=1;//И─▓Е╒·Х╝║Ф∙╟
 EPwm1Regs.TBCTL.bit.CLKDIV=0;
 EPwm1Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm1Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm1Regs.TBCTL.bit.PRDLD=0;//с╟всдёй╫
+EPwm1Regs.TBCTL.bit.PRDLD=0;//Е╫╠Е╜░Ф╗║Е╪▐
 EPwm1Regs.TBCTL.bit.PHSEN=0;//master
-EPwm1Regs.TBCTL.bit.CTRMODE=2;//тЖ╪У
+EPwm1Regs.TBCTL.bit.CTRMODE=2;//Е╒·Е┤▐
 
-EPwm1Regs.CMPCTL.all=0x0000;//cmpbс╟всв╟тьё╛cmpaс╟всв╟тьё╛╬Ыйг╧Щ0в╟ть
+EPwm1Regs.CMPCTL.all=0x0000;//cmpbЕ╫╠Е╜░Хё┘Х╫╫О╪▄cmpaЕ╫╠Е╜░Хё┘Х╫╫О╪▄Е²┤Ф≤╞Х©┤0Хё┘Х╫╫
 
-EPwm1Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipm╣м╣Гф╫спп╖ 1a
+EPwm1Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmД╫▌Г■╣Е╧ЁФ°┴Ф∙┬ 1a
 EPwm1Regs.AQCTLA.bit.CAD=AQ_SET;
 
 EPwm1Regs.DBCTL.bit.IN_MODE=0;//epwma source
@@ -159,28 +176,28 @@ EPwm1Regs.DBCTL.bit.POLSEL = DB_ACTV_LOC; // Active Hi complementary
 EPwm1Regs.DBFED= deadtime; // FED = 200 TBCLKs
 EPwm1Regs.DBRED= deadtime; // RED = 200 TBCLKs
 
-EPwm1Regs.ETSEL.bit.INTSEL=1;//обрГжп╤о
-EPwm1Regs.ETSEL.bit.INTEN=1;//й╧дэEPWM1_INTжп╤о
+EPwm1Regs.ETSEL.bit.INTSEL=1;//Д╦▀Ф╨╒Д╦╜Ф√╜
+EPwm1Regs.ETSEL.bit.INTEN=1;//Д╫©Х┐╫EPWM1_INTД╦╜Ф√╜
 EPwm1Regs.ETPS.bit.INTPRD = ET_1ST;           // Generate INT on 1st event
-EPwm1Regs.ETCLR.bit.INT=1;//гЕЁЩжп╤о╠Йж╬н╩
+EPwm1Regs.ETCLR.bit.INT=1;//Ф╦┘И≥╓Д╦╜Ф√╜Ф═┤Е©≈Д╫█
 
 // EPWM Module 2 config
 
-EPwm2Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100╠Мй╬10k
+EPwm2Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100Х║╗Г╓╨10k
 EPwm2Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
 EPwm2Regs.TBCTR=0;
-EPwm2Regs.TBCTL.bit.FREE_SOFT=0;//втситкпп
-EPwm2Regs.TBCTL.bit.PHSDIR=1;//╣щтЖ╪фйЩ
+EPwm2Regs.TBCTL.bit.FREE_SOFT=0;//Х┤╙Г■╠Х©░Х║▄
+EPwm2Regs.TBCTL.bit.PHSDIR=1;//И─▓Е╒·Х╝║Ф∙╟
 EPwm2Regs.TBCTL.bit.CLKDIV=0;
 EPwm2Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm2Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm2Regs.TBCTL.bit.PRDLD=0;//с╟всдёй╫
+EPwm2Regs.TBCTL.bit.PRDLD=0;//Е╫╠Е╜░Ф╗║Е╪▐
 EPwm2Regs.TBCTL.bit.PHSEN=0;//
-EPwm2Regs.TBCTL.bit.CTRMODE=2;//тЖ╪У
+EPwm2Regs.TBCTL.bit.CTRMODE=2;//Е╒·Е┤▐
 
-EPwm2Regs.CMPCTL.all=0x0000;//cmpbс╟всв╟тьё╛cmpaс╟всв╟тьё╛╬Ыйг╧Щ0в╟ть
+EPwm2Regs.CMPCTL.all=0x0000;//cmpbЕ╫╠Е╜░Хё┘Х╫╫О╪▄cmpaЕ╫╠Е╜░Хё┘Х╫╫О╪▄Е²┤Ф≤╞Х©┤0Хё┘Х╫╫
 
-EPwm2Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipm╣м╣Гф╫спп╖ 1a
+EPwm2Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmД╫▌Г■╣Е╧ЁФ°┴Ф∙┬ 1a
 EPwm2Regs.AQCTLA.bit.CAD=AQ_SET;
 
 EPwm2Regs.DBCTL.bit.IN_MODE=0;//epwma source
@@ -191,21 +208,21 @@ EPwm2Regs.DBRED= deadtime; // RED = 200 TBCLKs
 
 
 // EPWM Module 3 config
-EPwm3Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100╠Мй╬10k
+EPwm3Regs.TBPRD= 375000/100; // Period = 1600 TBCLKcounts Tpwm=2*TBPRD*Ttbclk,100Х║╗Г╓╨10k
 EPwm3Regs.TBPHS.half.TBPHS = 0; // Set Phaseregister to zero
 EPwm3Regs.TBCTR=0;
-EPwm3Regs.TBCTL.bit.FREE_SOFT=0;//втситкпп
-EPwm3Regs.TBCTL.bit.PHSDIR=1;//╣щтЖ╪фйЩ
+EPwm3Regs.TBCTL.bit.FREE_SOFT=0;//Х┤╙Г■╠Х©░Х║▄
+EPwm3Regs.TBCTL.bit.PHSDIR=1;//И─▓Е╒·Х╝║Ф∙╟
 EPwm3Regs.TBCTL.bit.CLKDIV=0;
 EPwm3Regs.TBCTL.bit.HSPCLKDIV=1;
 EPwm3Regs.TBCTL.bit.SYNCOSEL=0x3; 
-EPwm3Regs.TBCTL.bit.PRDLD=0;//с╟всдёй╫
+EPwm3Regs.TBCTL.bit.PRDLD=0;//Е╫╠Е╜░Ф╗║Е╪▐
 EPwm3Regs.TBCTL.bit.PHSEN=0;//
-EPwm3Regs.TBCTL.bit.CTRMODE=2;//тЖ╪У
+EPwm3Regs.TBCTL.bit.CTRMODE=2;//Е╒·Е┤▐
 
-EPwm3Regs.CMPCTL.all=0x0000;//cmpbс╟всв╟тьё╛cmpaс╟всв╟тьё╛╬Ыйг╧Щ0в╟ть
+EPwm3Regs.CMPCTL.all=0x0000;//cmpbЕ╫╠Е╜░Хё┘Х╫╫О╪▄cmpaЕ╫╠Е╜░Хё┘Х╫╫О╪▄Е²┤Ф≤╞Х©┤0Хё┘Х╫╫
 
-EPwm3Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipm╣м╣Гф╫спп╖ 1a
+EPwm3Regs.AQCTLA.bit.CAU=AQ_CLEAR;//ipmД╫▌Г■╣Е╧ЁФ°┴Ф∙┬ 1a
 EPwm3Regs.AQCTLA.bit.CAD=AQ_SET;
 
 EPwm3Regs.DBCTL.bit.IN_MODE=0;//epwma source
