@@ -16,3 +16,7 @@
 ## 4. QEP 采样位置
 - 把 `UpdatePositionFeedback()` 嵌入 PWM 中断中，让 `RawTheta`、速度和绝对位置在 10 kHz 采样率下实时刷新，外环只消费这些数据而不再重复读取 QEP。
 - **原因**：xptos 也是在功率中断中维护 QEP 累计，从而保证速度和位置反馈更平滑；demo 侧同步这一机制后，速度环仍保持原样，而位置环获得一致的高带宽测量。
+
+## 5. 位置环控制对齐 xptos
+- 将 `OutLoop_Control` 中的位置模式改为与 xptos 相同的 `Place_now + PosCount` 绝对脉冲累计方式，去掉 `PosRevCnt/PosInRev` 推算，直接以 `Place_now * PosRevScale` 作为 RCNS/PTOC 的反馈量。
+- **原因**：确保 demo 与 xptos 完全一致的结构和调试逻辑，避免两套位置控制实现长期漂移，便于统一维护。
