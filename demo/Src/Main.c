@@ -97,6 +97,7 @@ unsigned int t2_t1;
 Uint16 DirectionQep=0;               //转子旋转方向
 Uint32 RawTheta=0;
 Uint32 OldRawTheta=0;
+Uint32 OldRawThetaPos=0;
 float32 RawThetaTmp=0;
 
 float32 MechTheta = 0;             //机械角度，单位：度-》Rev
@@ -223,17 +224,16 @@ _iq ID_Ki=_IQ(0.061);
 ////=====================================================================
 
 //:::::::::::::::::::::::::::位置环变量定义:::::::::::::::::::::::::::
-Uint16 PosEnable=1;//位置控制 使能  1 使能 ;  0 -> 调速
-int32 PosRevCnt = 0; // in Rev
-float32 PosInRev = 0;
-float32 PosInit=0;
-float32 PosRef=1; //In Rev
-float32 PosErr=0;
+long Place_now=0;         // QEP累计脉冲数
+Uint16 PosEnable=1;       // 位置控制 使能  1 使能 ;  0 -> 调速
+int32 PosCount = 0;       // 脉冲圈计数
+float32 PosRef=1;         // In Rev
 float32 pscale=2;
+float32 yk=0;             // 位置反馈（单位：圈）
 int LoopCnt=0;
 Uint16 OutLoopScaler=20;
 int OutLoopCnt=0;
-Uint16 PosRefScaler=500; //600
+Uint16 PosRefScaler=500;  //600
 
 float32 Speed_pu;
 float32 speed_pu_m;
@@ -830,32 +830,51 @@ void OutLoop_Control(void)
 //======================================================================================================
 	// 旋转方向判定
 	DirectionQep = EQep1Regs.QEPSTS.bit.QDF;
-	// 计算机械角度
-	RawThetaTmp = (float)RawTheta - (float)OldRawTheta;
+        // 计算机械角度增量
+        RawThetaTmp = (float)RawTheta - (float)OldRawTheta;
 
-	if(DirectionQep ==1) //递增计数，代表顺时针；
-	{
+        if(DirectionQep ==1) //递增计数，代表顺时针；
+        {
 
-		if((OldRawTheta>(MaxPulses-1000)) && (RawTheta<1000))
-		{
-			RawThetaTmp = RawThetaTmp + (float)MaxPulses;
-			PosRevCnt++;    //+= TotalCnt
-		}
-	}
-	else //递减计数，代表逆时针   if(DirectionQep ==0)
-	{
+                if((OldRawTheta>(MaxPulses-1000)) && (RawTheta<1000))
+                {
+                        RawThetaTmp = RawThetaTmp + (float)MaxPulses;
+                }
+        }
+        else //递减计数，代表逆时针   if(DirectionQep ==0)
+        {
 
-		if((RawTheta>(MaxPulses-1000)) && (OldRawTheta<1000))
-		{
-			RawThetaTmp = RawThetaTmp - (float)MaxPulses;
-			PosRevCnt-- ;  // -= TotalCnt
-		}
+                if((RawTheta>(MaxPulses-1000)) && (OldRawTheta<1000))
+                {
+                        RawThetaTmp = RawThetaTmp - (float)MaxPulses;
+                }
 
-	}
-	PosInRev = PosRevCnt +  MechTheta;
+        }
 
-	speed_pu_m = (float)SpeedScale*(float)RawThetaTmp;
-	Speed = _IQ(speed_pu_m);
+        if(DirectionQep ==1)
+        {
+                if((OldRawThetaPos>(MaxPulses-1000)) && (RawTheta<1000))
+                {
+                        PosCount += MaxPulses;
+                }
+                Place_now = (long)RawTheta + PosCount;
+                OldRawThetaPos = RawTheta;
+        }
+
+        else if(DirectionQep ==0)
+        {
+                if((RawTheta>(MaxPulses-1000)) && (OldRawThetaPos<1000))
+                {
+                        PosCount -= MaxPulses;
+                }
+                Place_now = (long)RawTheta + PosCount;
+                OldRawThetaPos = RawTheta;
+        }
+
+        yk = (float32)Place_now * PosRevScale;
+
+        speed_pu_m = (float)SpeedScale*(float)RawThetaTmp;
+        Speed = _IQ(speed_pu_m);
 
 //	// T法测速
 //	if(EQep1Regs.QEPSTS.bit.UPEVNT==1)
@@ -879,12 +898,14 @@ void OutLoop_Control(void)
 
 
 	OutLoopCnt++;
-	if(PosEnable ==0)
-	{
-		PosRevCnt=0;
+        if(PosEnable ==0)
+        {
+                PosCount=0;
+                Place_now = (long)RawTheta;
+                OldRawThetaPos = RawTheta;
 //=================速度环 抗饱和PI控制===================================
-		if (OutLoopCnt>=SpeedRefScaler)
-		{
+                if (OutLoopCnt>=SpeedRefScaler)
+                {
 			OutLoopCnt=0;
 //			if (SpdRef == 0)
 //				SpdRef = SpeedRef;
@@ -936,9 +957,9 @@ void OutLoop_Control(void)
 				pscale=1;
 		}
 
-		pos_ctrl.Fdb = PosInRev;
-		pos_ctrl.calc(&pos_ctrl);
-		ctrl_uk = pos_ctrl.Out;   //UMAX;
+                pos_ctrl.Fdb = yk;
+                pos_ctrl.calc(&pos_ctrl);
+                ctrl_uk = pos_ctrl.Out;   //UMAX;
 
 //		float32 err = pos_ctrl.Ref - pos_ctrl.Fdb;
 //		float32 deadband = 1.0f / (float)MaxPulses * 2; // 例如 2 个脉冲的范围
@@ -946,13 +967,13 @@ void OutLoop_Control(void)
 //		    ctrl_uk = 0; // 或者一个小的保持电流
 //		}
 
-		IQ_Given = _IQdiv(_IQ(ctrl_uk),_IQ(UMAX));
-		if (IQ_Given>MaxOut)
-			IQ_Given=MaxOut;
-		else if(IQ_Given<MinOut)
-				IQ_Given=MinOut;
+                IQ_Given = _IQdiv(_IQ(ctrl_uk),_IQ(UMAX));
+                if (IQ_Given>MaxOut)
+                        IQ_Given=MaxOut;
+                else if(IQ_Given<MinOut)
+                                IQ_Given=MinOut;
 
-		performance_metrics_update(PosInRev);
+                performance_metrics_update(yk);
 
 		DlogCh1=(int16)IQ_Given;  //_IQ15(ctrl_uk)
 		DlogCh2=(int16)_IQ15(pos_ctrl.Fdb/pscale);
