@@ -40,6 +40,7 @@ interrupt void SCIBRX_ISR(void);
 interrupt void INT3_ISR(void);
 void OutLoop_Control(void);
 void performance_metrics_update(float y);
+static inline void UpdatePositionFeedback(Uint32 new_theta);
 //void Init_SiShu(void);
 
 //*****************************************************************************************************
@@ -394,7 +395,7 @@ void main(void)
 }
 
 void  QEP_Init(void)
-{
+{ 
 
 
 //    EALLOW;
@@ -428,6 +429,41 @@ void  QEP_Init(void)
 
 
 
+}
+
+static inline void UpdatePositionFeedback(Uint32 new_theta)
+{
+        float32 delta = (float32)new_theta - (float32)OldRawTheta;
+        Uint16 direction = EQep1Regs.QEPSTS.bit.QDF;
+        DirectionQep = direction;
+
+        if(direction == 1U)
+        {
+                if((OldRawTheta>(MaxPulses-1000U)) && (new_theta<1000U))
+                {
+                        delta += (float32)MaxPulses;
+                        PosRevCnt++;
+                }
+        }
+        else
+        {
+                if((new_theta>(MaxPulses-1000U)) && (OldRawTheta<1000U))
+                {
+                        delta -= (float32)MaxPulses;
+                        PosRevCnt--;
+                }
+        }
+
+        RawTheta = new_theta;
+        OldRawTheta = new_theta;
+        RawThetaTmp = delta;
+
+        Place_now = (long)new_theta + ((long)PosRevCnt * (long)MaxPulses);
+        PosInRev = (float32)Place_now * (float32)PosRevScale;
+        yk = PosInRev;
+
+        speed_pu_m = (float32)SpeedScale * delta;
+        Speed = _IQ(speed_pu_m);
 }
 
 interrupt void EPWM_1_INT(void)
@@ -577,9 +613,9 @@ if(Run_PMSM==1&&IPM_Fault==0)
 //QEP转子角度计算
 //====================================================================================================== 
 //		DirectionQep = EQep1Regs.QEPSTS.bit.QDF;
-        RawTheta = EQep1Regs.QPOSCNT;
+        Uint32 raw_theta = EQep1Regs.QPOSCNT;
 
-		MechTheta = (float)PosRevScale*(float)RawTheta;  //单位是圈数
+		MechTheta = (float)PosRevScale*(float)raw_theta;  //单位是圈数
 
 //        if(MechTheta>360)
 //        {MechTheta=MechTheta-360;}
@@ -595,6 +631,8 @@ if(Run_PMSM==1&&IPM_Fault==0)
 	   	Cosine = _IQcosPU(AnglePU);    
 
 	   	LoopCnt++;
+
+	   	UpdatePositionFeedback(raw_theta);
 
 	   	OutLoop_Control();
 
@@ -830,56 +868,9 @@ void OutLoop_Control(void)
 //======================================================================================================
 //QEP速度计算
 //======================================================================================================
-	// 旋转方向判定
-	DirectionQep = EQep1Regs.QEPSTS.bit.QDF;
-	// 计算机械角度
-	RawThetaTmp = (float)RawTheta - (float)OldRawTheta;
+        // 位置与速度反馈由 UpdatePositionFeedback() 在 PWM 中断中刷新，
+        // 这里只需要使用刷新后的 Speed/yk 即可。
 
-	if(DirectionQep ==1) //递增计数，代表顺时针；
-	{
-
-		if((OldRawTheta>(MaxPulses-1000)) && (RawTheta<1000))
-		{
-			RawThetaTmp = RawThetaTmp + (float)MaxPulses;
-			PosRevCnt++;    //+= TotalCnt
-		}
-	}
-	else //递减计数，代表逆时针   if(DirectionQep ==0)
-	{
-
-		if((RawTheta>(MaxPulses-1000)) && (OldRawTheta<1000))
-		{
-			RawThetaTmp = RawThetaTmp - (float)MaxPulses;
-			PosRevCnt-- ;  // -= TotalCnt
-		}
-
-	}
-        Place_now = (long)RawTheta + ((long)PosRevCnt * (long)MaxPulses);
-        PosInRev = (float32)Place_now * (float32)PosRevScale;
-        yk = PosInRev;
-
-	speed_pu_m = (float)SpeedScale*(float)RawThetaTmp;
-	Speed = _IQ(speed_pu_m);
-
-//	// T法测速
-//	if(EQep1Regs.QEPSTS.bit.UPEVNT==1)
-//	{
-//		if(EQep1Regs.QEPSTS.bit.COEF==0)
-//			t2_t1 =  EQep1Regs.QCPRD;
-//		else
-//			t2_t1 = 0xFFFF;
-//
-//		if(DirectionQep==1)
-//			Speed_rps = SpeedRpsScale /t2_t1;
-//		else
-//			Speed_rps = -SpeedRpsScale /t2_t1;
-//		speed_pu_t=Speed_rps/50;
-//
-//		EQep1Regs.QEPSTS.all=0x88;
-//	}
-
-
-	OldRawTheta = RawTheta;
 
 
 	OutLoopCnt++;
